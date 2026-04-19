@@ -1,0 +1,32 @@
+# Backup files
+app/static/icon_orig.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Data (history locale, non condiviso)
+data/history.json
+
+# Temp files
+*.wav
+*.tmp
+*.log
+
+# Environment and OS
+.env
+.DS_Store
+
+# Claude Code
+.claude/
+
+# Private dev files (not for public repo)
+CLAUDE.md
+TODOLIST.md
+
+# Python packaging
+*.pyd
+.pytest_cache/
+dist/
+*.egg-info/

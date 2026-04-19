@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f1117">
+  <title>MKV Maximus</title>
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- ── New version banner ─────────────────────────────────────────────────── -->
+<div class="new-version-banner" id="newVersionBanner" style="display:none">
+  <span><span data-i18n="banner_new_version">Nuova versione disponibile:</span> <strong id="newVersionTag">—</strong></span>
+  <a href="#" id="newVersionLink" target="_blank" rel="noopener" data-i18n="banner_go_github">Vai su GitHub</a>
+</div>
+
+<header class="app-header">
+  <button class="hdr-btn hdr-back hidden" id="btnBack" onclick="navigateToHub()" data-i18n="back_hub">← Hub</button>
+  <img src="/icon.png" class="app-icon" id="headerIcon" alt="">
+  <div class="header-title-block">
+    <h1 id="headerTitle">MKV Maximus</h1>
+    <span class="header-subtitle" id="headerSubtitle">The ultimate MKV toolkit</span>
+  </div>
+  <span class="version">beta 0.5 &middot; by <a href="https://github.com/linterista22" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">linterista22</a></span>
+  <div class="header-actions">
+    <button class="hdr-btn hdr-btn-muted" id="btnLangSwitch" onclick="toggleLang()" style="font-size:0.78rem;letter-spacing:0.02em">🌐 EN</button>
+    <button class="hdr-btn" onclick="openInfoModal()" data-i18n-title="btn_info_title" title="Informazioni">ℹ</button>
+    <button class="hdr-btn hdr-btn-muted" onclick="openBugReport()" data-i18n-title="btn_bug_title" title="Segnala un bug">🐛</button>
+    <button class="hdr-btn hdr-btn-muted" onclick="openLicense()" data-i18n-title="btn_license_title" title="Licenza">📄</button>
+  </div>
+</header>
+
+<!-- ── Info modal ─────────────────────────────────────────────────────────── -->
+<dialog id="infoModal" class="info-modal">
+  <div class="info-modal-inner">
+    <div class="info-modal-header">
+      <img src="/icon.png" class="info-modal-icon" alt="">
+      <div>
+        <div class="info-modal-title">MKV Maximus</div>
+        <div class="info-modal-sub">beta 0.5</div>
+      </div>
+      <button class="modal-close-btn" onclick="document.getElementById('infoModal').close()">✕</button>
+    </div>
+    <div class="info-modal-body">
+      <div class="info-row"><span class="info-label" data-i18n="info_author">Autore</span><span><a href="https://github.com/linterista22" target="_blank" rel="noopener">linterista22</a></span></div>
+      <div class="info-row"><span class="info-label">GitHub</span><span><a href="https://github.com/linterista22/mkv-maximus" target="_blank" rel="noopener">linterista22/mkv-maximus</a></span></div>
+      <div class="info-row"><span class="info-label" data-i18n="info_version">Versione</span><span>beta 0.5</span></div>
+      <div class="info-row"><span class="info-label" data-i18n="info_license">Licenza</span><span class="info-placeholder" data-i18n="info_license_val">GPL 3 — in arrivo —</span></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     HUB
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="hubSection" class="hub-section">
+  <div class="hub-intro">
+    <img src="/icon.png" class="hub-main-icon" alt="MKV Maximus">
+    <div>
+      <div class="hub-main-title">MKV Maximus</div>
+      <div class="hub-main-sub">The ultimate MKV toolkit for your home theater</div>
+    </div>
+  </div>
+  <div class="hub-grid">
+    <div class="hub-card" onclick="navigateTo('sync')">
+      <img src="/icon-sync.png" class="hub-card-icon" alt="">
+      <div class="hub-card-name">Sync</div>
+      <div class="hub-card-desc" data-i18n="hub_sync_desc">Sincronizza audio tra release diverse e rimux in un click</div>
+    </div>
+    <div class="hub-card" onclick="navigateTo('probe')">
+      <img src="/icon-probe.png" class="hub-card-icon" alt="">
+      <div class="hub-card-name">Probe</div>
+      <div class="hub-card-desc" data-i18n="hub_probe_desc">Analizza qualsiasi file media. Tutto quello che MediaInfo sa, in un tab</div>
+    </div>
+    <div class="hub-card" onclick="navigateTo('edit')">
+      <img src="/icon-edit.png" class="hub-card-icon" alt="">
+      <div class="hub-card-name">Edit</div>
+      <div class="hub-card-desc" data-i18n="hub_edit_desc">Cambia lingua, flag e titoli senza toccare il video. Istantaneo.</div>
+    </div>
+    <div class="hub-card" onclick="navigateTo('mux')">
+      <img src="/icon-mux.png" class="hub-card-icon" alt="">
+      <div class="hub-card-name">Mux</div>
+      <div class="hub-card-desc" data-i18n="hub_mux_desc">Assembla tracce da N file MKV. Il tuo MKVToolNix nel browser</div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:0.75rem 0 0.25rem">
+    <button class="btn btn-ghost btn-sm" onclick="navigateTo('settings')"
+            style="font-size:0.82rem;color:var(--text-muted)" data-i18n="hub_settings_btn">⚙ Impostazioni</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SETTINGS
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="settingsSection" class="hidden">
+<div class="main-container">
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙</span> OpenSubtitles.com</div>
+    <p id="settingsOsDesc" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">
+      Necessario per scaricare sottotitoli SRT da OpenSubtitles.
+      Crea un account gratuito su
+      <a href="https://www.opensubtitles.com" target="_blank" rel="noopener">opensubtitles.com</a>
+      e ottieni l'API key dalla pagina
+      <a href="https://www.opensubtitles.com/consumers" target="_blank" rel="noopener">Consumers</a>.
+    </p>
+    <div class="field-group">
+      <label class="field-label">Username</label>
+      <input type="text" id="settingsOsUsername" placeholder="salvo89" autocomplete="username">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Password</label>
+      <input type="password" id="settingsOsPassword" autocomplete="current-password">
+    </div>
+    <div class="field-group" style="margin-bottom:1rem">
+      <label class="field-label">API Key</label>
+      <input type="text" id="settingsOsApiKey" placeholder="aRbFoQ1u…" autocomplete="off">
+    </div>
+    <div style="display:flex;gap:0.5rem">
+      <button class="btn btn-primary" id="btnSettingsSave" onclick="settingsSave()" data-i18n="settings_save">
+        💾 Salva
+      </button>
+      <button class="btn btn-ghost" id="btnSettingsTest" onclick="settingsTest()" data-i18n="settings_test">
+        🔗 Test connessione
+      </button>
+    </div>
+    <div id="settingsResult" class="hidden mt-2"></div>
+  </div>
+
+</div>
+</div><!-- /settingsSection -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SYNC
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="syncSection" class="hidden">
+<div class="main-container">
+
+  <!-- ── Step nav ──────────────────────────────────────────────────────── -->
+  <nav class="steps-nav" id="stepsNav">
+    <div class="step-pill active" data-step="1"><span class="step-num">1</span> <span data-i18n="step_file">File</span></div>
+    <div class="step-pill" data-step="2"><span class="step-num">2</span> <span data-i18n="step_analysis">Analisi</span></div>
+    <div class="step-pill" data-step="3"><span class="step-num">3</span> <span data-i18n="step_offset">Offset</span></div>
+    <div class="step-pill" data-step="4"><span class="step-num">4</span> <span data-i18n="step_output">Output</span></div>
+    <div class="step-pill" data-step="5"><span class="step-num">5</span> <span data-i18n="step_tracks">Tracce</span></div>
+    <div class="step-pill" data-step="6"><span class="step-num">6</span> <span data-i18n="step_mux">Mux</span></div>
+  </nav>
+
+  <!-- ── Step 1: File selection ──────────────────────────────────────── -->
+  <section id="step1" class="step-section">
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> <span data-i18n="mode_title">Modalità</span></div>
+      <div class="mode-toggle">
+        <input type="radio" name="mode" id="modeSingle" value="single" checked onchange="onModeChange('single')">
+        <label for="modeSingle" data-i18n="mode_single">📄 Singolo film</label>
+        <input type="radio" name="mode" id="modeSeason" value="season" onchange="onModeChange('season')">
+        <label for="modeSeason" data-i18n="mode_season">📂 Cartella stagione</label>
+      </div>
+    </div>
+
+    <div id="singleSection">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><span class="icon">🎥</span> <span data-i18n="video_file_card">File VIDEO</span></div>
+          <div class="field-group">
+            <div class="file-picker" id="videoPicker" onclick="openBrowser('video')">
+              <span class="file-picker-icon">🗂️</span>
+              <div class="file-picker-text">
+                <div class="file-picker-label" data-i18n="video_file_label">File di cui tenere il video</div>
+                <div class="file-picker-value placeholder" id="videoPickerVal">Tocca per sfogliare…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="icon">🔊</span> <span data-i18n="source_file_card">File AUDIO/SUB</span></div>
+          <div class="field-group">
+            <div class="file-picker" id="sourcePicker" onclick="openBrowser('source')">
+              <span class="file-picker-icon">🗂️</span>
+              <div class="file-picker-text">
+                <div class="file-picker-label" data-i18n="source_file_label">File da cui prendere audio e subs</div>
+                <div class="file-picker-value placeholder" id="sourcePickerVal">Tocca per sfogliare…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary w-full" id="btnAnalyze" disabled onclick="doAnalyze()" data-i18n="btn_analyze">
+        Analizza tracce →
+      </button>
+    </div>
+
+    <div id="seasonSection" class="hidden">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title"><span class="icon">📂</span> <span data-i18n="video_dir_card">Cartella VIDEO</span></div>
+          <div class="field-group">
+            <div class="file-picker" id="videoDirPicker" onclick="openBrowser('videoDir')">
+              <span class="file-picker-icon">🗂️</span>
+              <div class="file-picker-text">
+                <div class="file-picker-label" data-i18n="video_dir_label">Cartella con i file video</div>
+                <div class="file-picker-value placeholder" id="videoDirPickerVal">Tocca per sfogliare…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="icon">📂</span> <span data-i18n="source_dir_card">Cartella SORGENTE</span></div>
+          <div class="field-group">
+            <div class="file-picker" id="sourceDirPicker" onclick="openBrowser('sourceDir')">
+              <span class="file-picker-icon">🗂️</span>
+              <div class="file-picker-text">
+                <div class="file-picker-label" data-i18n="source_dir_label">Cartella con i file sorgente</div>
+                <div class="file-picker-value placeholder" id="sourceDirPickerVal">Tocca per sfogliare…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-secondary w-full" id="btnMatch" disabled onclick="doMatchEpisodes()" data-i18n="btn_match">
+        🔍 Abbina episodi →
+      </button>
+      <div id="matchResults" class="hidden">
+        <div class="card mt-2">
+          <div class="card-title"><span class="icon">🔗</span> <span data-i18n="match_card_title">Episodi abbinati</span>
+            <span id="matchCount" style="font-size:0.8rem;font-weight:400;margin-left:0.5rem;color:var(--text-muted)"></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap">
+            <span id="matchSelectedCount" style="font-size:0.82rem;color:var(--text-muted);flex:1"></span>
+            <button class="btn btn-ghost btn-sm" onclick="setAllEpisodesEnabled(true)" data-i18n="match_select_all">Tutti ☑</button>
+            <button class="btn btn-ghost btn-sm" onclick="setAllEpisodesEnabled(false)" data-i18n="match_deselect_all">Nessuno ☐</button>
+          </div>
+          <div class="match-table-wrap">
+            <table class="track-table" id="matchTable">
+              <thead><tr>
+                <th data-i18n="match_th_include" style="width:2.5rem;text-align:center">Incl.</th>
+                <th data-i18n="match_th_ep">Ep.</th>
+                <th data-i18n="match_th_video">File VIDEO</th>
+                <th data-i18n="match_th_source">File SORGENTE</th>
+                <th data-i18n="match_th_output">Output</th>
+              </tr></thead>
+              <tbody id="matchTableBody"></tbody>
+            </table>
+          </div>
+          <div id="matchUnmatched" class="hidden" style="margin-top:0.5rem;font-size:0.8rem;color:var(--warning)"></div>
+        </div>
+        <button class="btn btn-primary w-full mt-2" id="btnConfirmMatch" onclick="confirmMatches()" data-i18n="btn_confirm_match">
+          ✓ Conferma e analizza primo episodio →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Step 2: Track analysis / Season track selection ──────────────── -->
+  <section id="step2" class="step-section hidden">
+    <!-- Single mode: analysis cards -->
+    <div class="two-col" id="tracksDisplay"></div>
+    <div id="actionsPanel" class="hidden"></div>
+    <!-- Season mode (SZ1): track union selection -->
+    <div id="seasonTrackUnionPanel" class="hidden"></div>
+    <div class="step-nav-btns">
+      <button class="btn btn-ghost" onclick="goToStep(1)" data-i18n="btn_back">← Indietro</button>
+      <button class="btn btn-primary" id="btnGoOffset" onclick="goToStep(3)" data-i18n="btn_go_offset">Configura offset →</button>
+    </div>
+  </section>
+
+  <!-- ── Step 3: Offset configuration ───────────────────────────────── -->
+  <section id="step3" class="step-section hidden">
+    <div class="card">
+      <div class="card-title"><span class="icon">⏱️</span> <span data-i18n="offset_tracks_card">Tracce di confronto</span></div>
+      <div id="refAudioDesyncWarning" class="alert alert-warning hidden" style="margin-bottom:0.75rem"></div>
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label" data-i18n="audio_track_video">Traccia audio — file VIDEO</label>
+          <select id="selOffsetVideo"></select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" data-i18n="audio_track_source">Traccia audio — file AUDIO/SUBS</label>
+          <select id="selOffsetSource"></select>
+        </div>
+      </div>
+      <div class="field-group mt-1 hidden" id="sigModeSection">
+        <div class="two-col mt-1">
+          <label class="field-label">
+            <input type="radio" name="seasonOffsetMode" id="rdoStandard" value="standard" checked onchange="toggleSeasonOffsetMode()">
+            &nbsp;<span data-i18n="sz_mode_standard">Standard</span>
+          </label>
+          <label class="field-label">
+            <input type="radio" name="seasonOffsetMode" id="rdoSignature" value="signature" onchange="toggleSeasonOffsetMode()">
+            &nbsp;<span data-i18n="sz_mode_signature">Modalità sigla (serie TV)</span>
+          </label>
+        </div>
+        <div id="sigFieldsSeason" class="hidden mt-1">
+          <div class="field-group">
+            <label class="field-label" data-i18n="sz_sig_ref_ep">Episodio di riferimento</label>
+            <span id="sigRefEp" class="badge badge-info">—</span>
+          </div>
+          <div class="two-col mt-1">
+            <div class="field-group">
+              <label class="field-label" data-i18n="sz_sig_from">Sigla da (MM:SS)</label>
+              <input type="text" id="sigSeasonFrom" value="4:06" placeholder="4:06">
+            </div>
+            <div class="field-group">
+              <label class="field-label" data-i18n="sz_sig_to">a (MM:SS)</label>
+              <input type="text" id="sigSeasonTo" value="4:16" placeholder="4:16">
+            </div>
+          </div>
+          <div class="field-group mt-1">
+            <label class="field-label" data-i18n="sz_sig_track">Traccia audio di riferimento</label>
+            <select id="selSigTrackSeason"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="offsetWindowCard">
+      <div class="card-title"><span class="icon">🪟</span> <span data-i18n="offset_windows_card">Finestre di analisi</span></div>
+      <div class="two-col">
+        <div>
+          <div class="field-label" data-i18n="window_start">Finestra INIZIO</div>
+          <div class="field-row mt-1">
+            <div class="field-group" style="flex:1"><label class="field-label" data-i18n="window_start_s">Start (s)</label><input type="number" id="startStart" value="300" min="0"></div>
+            <div class="field-group" style="flex:1"><label class="field-label" data-i18n="window_duration_s">Durata (s)</label><input type="number" id="startDuration" value="60" min="10"></div>
+          </div>
+        </div>
+        <div>
+          <div class="field-label" data-i18n="window_end">Finestra FINE</div>
+          <div class="field-row mt-1">
+            <div class="field-group" style="flex:1"><label class="field-label" data-i18n="window_start_s">Start (s)</label><input type="number" id="endStart" value="0" min="0"></div>
+            <div class="field-group" style="flex:1"><label class="field-label" data-i18n="window_duration_s">Durata (s)</label><input type="number" id="endDuration" value="60" min="10"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-nav-btns">
+      <button class="btn btn-ghost" onclick="goToStep(2)" data-i18n="btn_back">← Indietro</button>
+      <!-- Single mode: calculate offset then proceed -->
+      <button class="btn btn-primary" id="btnCalcOffset" onclick="doCalcOffset()">
+        <span id="offsetBtnIcon">⚡</span> <span data-i18n="btn_calc_offset">Calcola offset</span>
+      </button>
+      <!-- Season mode (SZ2): skip calculation, go directly to output -->
+      <button class="btn btn-primary hidden" id="btnGoOutputSeason" onclick="goToStep(4)" data-i18n="btn_set_output">Imposta output →</button>
+    </div>
+
+    <div id="offsetProgressArea" class="hidden"
+         style="margin-top:0.75rem;padding:0.55rem 0.9rem;background:var(--bg-input);border-radius:6px;
+                display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;color:var(--text-muted)">
+      <span class="spinner"></span>
+      <span id="offsetElapsedLabel"></span>
+    </div>
+
+    <div id="offsetResults" class="hidden">
+      <div class="two-col mt-2" id="offsetResultsGrid"></div>
+      <div id="driftWarn" class="drift-warn hidden"></div>
+      <div id="offsetSummary" class="alert alert-success mt-2 hidden"></div>
+      <button class="btn btn-primary w-full mt-2" onclick="goToStep(4)" data-i18n="btn_set_output">Imposta output →</button>
+    </div>
+  </section>
+
+  <!-- ── Step 4: Output settings ─────────────────────────────────────── -->
+  <section id="step4" class="step-section hidden">
+    <div class="card">
+      <div class="card-title"><span class="icon">💾</span> <span data-i18n="output_file_card">File di output</span></div>
+      <div class="field-group">
+        <label class="field-label" data-i18n="output_dir_label">Cartella destinazione</label>
+        <div class="field-row">
+          <input type="text" id="outputDir" readonly placeholder="/storage/...">
+          <button class="btn btn-ghost btn-sm" onclick="openBrowser('outputDir')">📁</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label" data-i18n="output_title_label">Titolo MKV</label>
+        <input type="text" id="outputTitle" data-i18n-placeholder="output_title_placeholder"
+               placeholder="Titolo del film (tag container)">
+      </div>
+      <div class="field-group" id="outputNameField">
+        <label class="field-label" data-i18n="output_name_label">Nome file</label>
+        <input type="text" id="outputName" placeholder="Nome output.mkv">
+      </div>
+      <div id="outputSeasonNote" class="hidden" style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem"
+           data-i18n="output_season_note">
+        Il nome di ogni episodio viene generato automaticamente dal nome del file video.
+      </div>
+    </div>
+
+    <!-- Capitoli -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📖</span> <span data-i18n="chapters_card">Capitoli</span></div>
+      <div class="chapters-options">
+        <label class="chapters-option">
+          <input type="radio" name="chaptersMode" value="from_video" checked onchange="onChaptersModeChange(this.value)">
+          <span id="chLabelFromVideo" data-i18n="ch_from_video">Mantieni dal file video</span>
+        </label>
+        <label class="chapters-option">
+          <input type="radio" name="chaptersMode" value="from_source" onchange="onChaptersModeChange(this.value)">
+          <span id="chLabelFromSource" data-i18n="ch_from_source">Mantieni dal file audio/subs</span>
+        </label>
+        <label class="chapters-option">
+          <input type="radio" name="chaptersMode" value="generate" onchange="onChaptersModeChange(this.value)">
+          <span data-i18n="ch_generate">Genera automaticamente</span>
+        </label>
+        <label class="chapters-option">
+          <input type="radio" name="chaptersMode" value="none" onchange="onChaptersModeChange(this.value)">
+          <span data-i18n="ch_none">Nessun capitolo</span>
+        </label>
+      </div>
+      <div id="chaptersIntervalRow" class="hidden" style="margin-top:0.75rem">
+        <div class="field-row" style="align-items:center;gap:0.6rem">
+          <label class="field-label" style="margin:0;white-space:nowrap" data-i18n="ch_every">Ogni</label>
+          <input type="number" id="chaptersInterval" value="10" min="1" max="120"
+                 style="width:70px" onchange="updateChaptersEstimate()">
+          <span style="font-size:0.85rem;color:var(--text-muted)" data-i18n="ch_minutes">minuti</span>
+          <span id="chaptersEstimate" style="font-size:0.82rem;color:var(--text-muted);margin-left:0.5rem"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Season mode (SZ3+SZ4): batch offset calculation progress -->
+    <div id="batchOffsetSection" class="hidden">
+      <div class="card">
+        <div class="card-title"><span class="icon">⚡</span> <span data-i18n="sz_batch_offset_card">Calcolo offset episodi</span></div>
+        <div class="progress-bar-wrap" id="batchOffsetProgressBarWrap" style="margin-bottom:0.5rem">
+          <div class="progress-bar" id="batchOffsetBar" style="width:0%"></div>
+        </div>
+        <div id="batchOffsetLog" class="batch-offset-log"></div>
+      </div>
+    </div>
+
+    <!-- Single mode nav -->
+    <div class="step-nav-btns" id="step4NavSingle">
+      <button class="btn btn-ghost" onclick="goToStep(3)" data-i18n="btn_back">← Indietro</button>
+      <button class="btn btn-primary" onclick="goToStep(5)" data-i18n="btn_sel_tracks">Selezione tracce →</button>
+    </div>
+    <!-- Season mode nav (SZ3): calcola offset then go to summary -->
+    <div class="step-nav-btns hidden" id="step4NavSeason">
+      <button class="btn btn-ghost" onclick="goToStep(3)" data-i18n="btn_back">← Indietro</button>
+      <button class="btn btn-primary" id="btnCalcBatchOffset" onclick="doCalcBatchOffset()" data-i18n="sz_calc_batch_btn">Calcola offset →</button>
+      <button class="btn btn-success hidden" id="btnGoSummary" onclick="goToStep(5)" data-i18n="sz_btn_go_summary">Riepilogo →</button>
+    </div>
+  </section>
+
+  <!-- ── Step 5: Track table (single) / Offset summary (season) ──────── -->
+  <section id="step5" class="step-section hidden">
+
+    <!-- Season mode (SZ5): offset summary + mux button -->
+    <div id="seasonSummaryPanel" class="hidden">
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> <span data-i18n="sz_summary_card">Riepilogo offset</span></div>
+        <div class="track-table-wrap">
+          <table class="track-table" id="seasonSummaryTable">
+            <thead><tr>
+              <th data-i18n="sz_th_ep">Ep.</th>
+              <th data-i18n="sz_th_filename">File</th>
+              <th data-i18n="sz_th_delay">Delay (ms)</th>
+              <th data-i18n="sz_th_score">Score</th>
+              <th data-i18n="sz_th_drift">Drift (ms)</th>
+              <th data-i18n="sz_th_status">Stato</th>
+              <th data-i18n="sz_th_force">Forza</th>
+            </tr></thead>
+            <tbody id="seasonSummaryBody"></tbody>
+          </table>
+        </div>
+        <div id="seasonSummaryNote" class="alert alert-warning hidden" style="margin-top:0.5rem"></div>
+      </div>
+      <div class="step-nav-btns">
+        <button class="btn btn-ghost" onclick="goToStep(4)" data-i18n="btn_back">← Indietro</button>
+        <button class="btn btn-success" id="btnStartBatchFromSummary" onclick="doStartBatchFromSummary()" data-i18n="sz_btn_start_batch_mux">🚀 Avvia mux batch</button>
+      </div>
+    </div>
+
+    <!-- Single mode: track table -->
+    <div id="singleTrackPanel">
+      <div class="card">
+        <div class="card-title"><span class="icon">📋</span> <span data-i18n="track_output_card">Tracce nell'output</span></div>
+        <div class="bulk-controls">
+          <span class="bulk-label" data-i18n="bulk_audio_video">Audio video:</span>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('audio','video',true)" data-i18n="bulk_all">☑ Tutti</button>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('audio','video',false)" data-i18n="bulk_none">☐ Nessuno</button>
+          <span class="bulk-sep">|</span>
+          <span class="bulk-label" data-i18n="bulk_audio_source">Audio sorgente:</span>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('audio','source',true)" data-i18n="bulk_all">☑ Tutti</button>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('audio','source',false)" data-i18n="bulk_none">☐ Nessuno</button>
+          <span class="bulk-sep">|</span>
+          <span class="bulk-label" data-i18n="bulk_sub_video">Sub video:</span>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('subtitle','video',true)" data-i18n="bulk_all">☑ Tutti</button>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('subtitle','video',false)" data-i18n="bulk_none">☐ Nessuno</button>
+          <span class="bulk-sep">|</span>
+          <span class="bulk-label" data-i18n="bulk_sub_source">Sub sorgente:</span>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('subtitle','source',true)" data-i18n="bulk_all">☑ Tutti</button>
+          <button class="btn btn-ghost btn-xs" onclick="bulkInclude('subtitle','source',false)" data-i18n="bulk_none">☐ Nessuno</button>
+        </div>
+        <div class="track-table-wrap">
+          <table class="track-table" id="trackTable">
+            <thead>
+              <tr>
+                <th data-i18n="th_num">#</th>
+                <th data-i18n="th_type">Tipo</th>
+                <th data-i18n="th_from">Da</th>
+                <th data-i18n="th_codec">Codec</th>
+                <th data-i18n="th_language">Lingua</th>
+                <th data-i18n="th_title">Titolo</th>
+                <th data-i18n="th_info">Info</th>
+                <th data-i18n="th_delay">Delay (ms)</th>
+                <th data-i18n="th_default">Default</th>
+                <th data-i18n="th_forced">Forced</th>
+                <th data-i18n="th_include">Includi</th>
+              </tr>
+            </thead>
+            <tbody id="trackTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="step-nav-btns">
+        <button class="btn btn-ghost" onclick="goToStep(4)" data-i18n="btn_back">← Indietro</button>
+        <button class="btn btn-success" id="btnStartMux" onclick="doStartMux()" data-i18n="btn_start_mux">🚀 Avvia mux</button>
+        <button class="btn btn-success hidden" id="btnStartBatch" onclick="doStartBatch()" data-i18n="btn_start_batch">🚀 Avvia batch</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Step 6: Progress ────────────────────────────────────────────── -->
+  <section id="step6" class="step-section hidden">
+    <div class="card" id="progressCard">
+      <div class="card-title"><span class="icon">⚙️</span> <span data-i18n="progress_card_title">Mux in corso</span></div>
+      <div id="progressPhaseLabel" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem;" data-i18n="progress_starting">Avvio…</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem;" id="progressPct">0%</div>
+      <div class="log-output mt-2" id="logOutput"></div>
+      <div id="muxErrorAlert" class="alert alert-danger mt-2 hidden"></div>
+    </div>
+    <div id="batchEpisodeList" class="hidden">
+      <div class="card">
+        <div class="card-title"><span class="icon">📋</span> <span data-i18n="episodes_card_title">Episodi</span>
+          <span id="batchCounter" style="font-size:0.8rem;font-weight:400;margin-left:0.5rem;color:var(--text-muted)"></span>
+        </div>
+        <div id="batchEpisodeItems"></div>
+      </div>
+    </div>
+    <div id="resultCard" class="card result-card hidden">
+      <div class="result-ok-icon">✅</div>
+      <div class="result-filename" id="resultFilename"></div>
+      <div class="result-size" id="resultSize"></div>
+      <ul class="track-summary-list" id="resultTrackList"></ul>
+      <div class="flex gap-1 mt-2">
+        <button class="btn btn-ghost btn-sm" onclick="goToStep(5)" data-i18n="btn_back_tracks">← Torna alle tracce</button>
+        <button class="btn btn-ghost btn-sm" onclick="goToStep(1); resetAll()" data-i18n="btn_new">↺ Nuovo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── History ─────────────────────────────────────────────────────── -->
+  <div class="history-section">
+    <button class="history-toggle" onclick="toggleHistory()">
+      <span id="histToggleIcon">▶</span> <span data-i18n="history_toggle_text">Ultimi job</span>
+    </button>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+</div>
+</div><!-- /syncSection -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PROBE
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="probeSection" class="hidden">
+<div class="main-container">
+
+  <!-- Mode tabs -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔬</span> <span data-i18n="probe_mode_card">Modalità</span></div>
+    <div class="mode-toggle">
+      <input type="radio" name="probeMode" id="probeModeFile" value="file" checked onchange="onProbeModeChange('file')">
+      <label for="probeModeFile" data-i18n="probe_single_label">📄 Singolo file</label>
+      <input type="radio" name="probeMode" id="probeModeFolder" value="folder" onchange="onProbeModeChange('folder')">
+      <label for="probeModeFolder" data-i18n="probe_folder_label_radio">📂 Cartella</label>
+    </div>
+  </div>
+
+  <!-- Single file mode -->
+  <div id="probeSingleSection">
+    <div class="card">
+      <div class="card-title"><span class="icon">📁</span> <span data-i18n="probe_file_card">File</span></div>
+      <div class="file-picker" id="probePicker" onclick="openBrowser('probeFile', {filter:'media'})">
+        <span class="file-picker-icon">🗂️</span>
+        <div class="file-picker-text">
+          <div class="file-picker-label" data-i18n="probe_file_select_label">Seleziona file media (qualsiasi formato)</div>
+          <div class="file-picker-value placeholder" id="probePickerVal">Tocca per sfogliare…</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="probeOutputSection" class="hidden">
+      <div id="probeTitleBadge" class="hidden" style="margin-bottom:0.5rem;font-size:0.9rem;
+           background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+           padding:0.4rem 0.75rem;color:var(--text-muted)">
+        <span style="font-weight:600;color:var(--text)">🎬 </span>
+        <span id="probeTitleText"></span>
+      </div>
+      <div class="card">
+        <div class="probe-toolbar">
+          <div class="probe-format-tabs">
+            <button class="probe-tab active" id="probeTabText" onclick="switchProbeFormat('text')" data-i18n="probe_tab_text">Testo</button>
+            <button class="probe-tab" id="probeTabJson" onclick="switchProbeFormat('json')">JSON</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="probeCopyBtn" onclick="probeCopy()" data-i18n="probe_copy_btn">📋 Copia</button>
+          <button class="btn btn-ghost btn-sm" onclick="probeDownload()" data-i18n="probe_download_btn">💾 Scarica</button>
+        </div>
+        <pre class="probe-pre" id="probeOutput"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folder mode (M6) -->
+  <div id="probeFolderSection" class="hidden">
+    <div class="card">
+      <div class="card-title"><span class="icon">📂</span> <span data-i18n="probe_folder_card">Cartella</span></div>
+      <div class="file-picker" id="probeFolderPicker" onclick="openBrowser('probeFolderDir', {filter:'dir'})">
+        <span class="file-picker-icon">🗂️</span>
+        <div class="file-picker-text">
+          <div class="file-picker-label" data-i18n="probe_folder_select_label">Seleziona cartella</div>
+          <div class="file-picker-value placeholder" id="probeFolderPickerVal">Tocca per sfogliare…</div>
+        </div>
+      </div>
+      <button class="btn btn-primary w-full mt-2" id="btnProbeFolder" disabled onclick="doProbeFolderAnalyze()" data-i18n="btn_probe_folder">
+        Analizza cartella →
+      </button>
+    </div>
+
+    <div id="probeFolderResults" class="hidden">
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> <span data-i18n="probe_summary_card">Riepilogo</span>
+          <span id="probeFolderCount" style="font-size:0.8rem;font-weight:400;margin-left:0.5rem;color:var(--text-muted)"></span>
+        </div>
+        <div class="track-table-wrap">
+          <table class="track-table" id="probeFolderTable">
+            <thead>
+              <tr>
+                <th data-i18n="probe_th_file">File</th>
+                <th data-i18n="probe_th_duration">Durata</th>
+                <th data-i18n="probe_th_video">Video</th>
+                <th data-i18n="probe_th_resolution">Risoluzione</th>
+                <th data-i18n="probe_th_audio">Audio</th>
+                <th data-i18n="probe_th_size">Dimensione</th>
+                <th data-i18n="probe_th_detail">Dettaglio</th>
+              </tr>
+            </thead>
+            <tbody id="probeFolderTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="probeFolderDetailSection" class="hidden">
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">🔍</span>
+          <span data-i18n="probe_folder_detail_card">Dettaglio file</span>
+          <span id="probeFolderDetailName" style="font-size:0.8rem;font-weight:400;margin-left:0.5rem;color:var(--text-muted)"></span>
+        </div>
+        <div class="probe-toolbar">
+          <div class="probe-tabs">
+            <button class="probe-tab active" id="probeFolderDetailTabText" onclick="switchProbeFolderDetailFormat('text')">Text</button>
+            <button class="probe-tab" id="probeFolderDetailTabJson" onclick="switchProbeFolderDetailFormat('json')">JSON</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="probeFolderDetailCopy()" data-i18n="probe_copy_btn">📋 Copia</button>
+          <button class="btn btn-ghost btn-sm" onclick="probeFolderDetailDownload()" data-i18n="probe_download_btn">💾 Scarica</button>
+        </div>
+        <pre class="probe-pre" id="probeFolderDetailOutput"></pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /probeSection -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     EDIT
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="editSection" class="hidden">
+<div class="main-container">
+
+  <div class="card">
+    <!-- Mode toggle -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:0.85rem">
+      <label style="flex:1;display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:6px">
+        <input type="radio" name="editMode" value="single" checked onchange="toggleEditMode('single')">
+        <span data-i18n="edit_mode_single">Singolo file</span>
+      </label>
+      <label style="flex:1;display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:6px">
+        <input type="radio" name="editMode" value="batch" onchange="toggleEditMode('batch')">
+        <span data-i18n="edit_mode_batch">Cartella stagione</span>
+      </label>
+    </div>
+
+    <div class="card-title"><span class="icon">📝</span> <span id="editFileCardTitle" data-i18n="edit_file_card">File MKV</span></div>
+
+    <!-- Single file picker -->
+    <div id="editSinglePickerWrap">
+      <div class="file-picker" id="editPicker" onclick="openBrowser('editFile')">
+        <span class="file-picker-icon">🗂️</span>
+        <div class="file-picker-text">
+          <div class="file-picker-label" data-i18n="edit_file_select_label">Seleziona file MKV da modificare</div>
+          <div class="file-picker-value placeholder" id="editPickerVal">Tocca per sfogliare…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch folder picker (hidden by default) -->
+    <div id="editBatchPickerWrap" class="hidden">
+      <div class="file-picker" id="editBatchPicker" onclick="openBrowser('editBatchDir', {filter:'dir'})">
+        <span class="file-picker-icon">📁</span>
+        <div class="file-picker-text">
+          <div class="file-picker-label" data-i18n="edit_batch_folder_label">Seleziona cartella con file MKV</div>
+          <div class="file-picker-value placeholder" id="editBatchPickerVal">Tocca per sfogliare…</div>
+        </div>
+      </div>
+      <div id="editBatchFilesCount" class="hidden" style="font-size:0.82rem;color:var(--text-muted);margin-top:0.4rem"></div>
+    </div>
+
+    <button class="btn btn-primary w-full mt-2" id="btnEditAnalyze" disabled onclick="doEditAnalyze()" data-i18n="btn_edit_analyze">
+      Analizza →
+    </button>
+  </div>
+
+  <div id="editTrackSection" class="hidden">
+
+    <!-- Batch mode note -->
+    <div id="editBatchNoteCard" class="hidden" style="background:var(--bg-alt);border:1px solid var(--accent);border-radius:8px;padding:0.65rem 0.9rem;font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem" data-i18n-html="edit_batch_analyze_note_html">
+      <strong>Struttura tracce dal primo file.</strong> Le modifiche verranno applicate a tutti i file nella cartella.
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🏷️</span> <span data-i18n="edit_title_card">Titolo file</span></div>
+      <div class="field-group" style="margin-bottom:0">
+        <label class="field-label" data-i18n="edit_title_label">Titolo (lascia vuoto per rimuovere)</label>
+        <input type="text" id="editFileTitle" data-i18n-placeholder="edit_title_placeholder" placeholder="es. Antz (1998)">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📋</span> <span data-i18n="edit_tracks_card">Tracce</span></div>
+      <div id="editIsoNote" style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem" data-i18n-html="edit_iso_note_html">
+        Codici lingua ISO 639-2: <code>ita</code>, <code>eng</code>, <code>fra</code>, <code>deu</code>, <code>spa</code> …
+      </div>
+      <div class="track-table-wrap">
+        <table class="track-table" id="editTrackTable">
+          <thead>
+            <tr>
+              <th data-i18n="edit_th_type">Tipo</th>
+              <th data-i18n="edit_th_codec">Codec</th>
+              <th data-i18n="edit_th_lang">Lingua</th>
+              <th data-i18n="edit_th_title">Titolo</th>
+              <th data-i18n="edit_th_default">Default</th>
+              <th data-i18n="edit_th_forced">Forced</th>
+              <th data-i18n="edit_th_enabled">Abilitata</th>
+            </tr>
+          </thead>
+          <tbody id="editTrackTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <input type="hidden" id="editChaptersDeleteFlag" value="0">
+
+    <div class="card hidden" id="editChaptersCard">
+      <div class="card-title"><span class="icon">📑</span> <span data-i18n="edit_chapters_card">Capitoli</span></div>
+      <p id="editChaptersEmpty" class="hidden" style="font-size:0.85rem;color:var(--text-muted);margin:0" data-i18n="edit_chapters_none">Nessun capitolo presente.</p>
+      <div class="track-table-wrap">
+        <table class="track-table">
+          <thead>
+            <tr>
+              <th data-i18n="edit_th_ch_num">#</th>
+              <th data-i18n="edit_th_ch_ts">Timestamp</th>
+              <th data-i18n="edit_th_ch_name">Nome</th>
+            </tr>
+          </thead>
+          <tbody id="editChaptersBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-danger w-full mt-2" id="btnDeleteChapters" onclick="doDeleteAllChaptersUI()" data-i18n="btn_delete_chapters">
+        🗑️ Elimina tutti i capitoli
+      </button>
+    </div>
+
+    <div class="card hidden" id="editAttachmentsCard">
+      <div class="card-title"><span class="icon">📎</span> <span data-i18n="edit_attachments_card">Allegati</span></div>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem" data-i18n="edit_attachments_note">Deseleziona per eliminare un allegato dal file.</p>
+      <div class="track-table-wrap">
+        <table class="track-table">
+          <thead>
+            <tr>
+              <th data-i18n="edit_th_att_keep">Tieni</th>
+              <th data-i18n="edit_th_att_name">Nome</th>
+              <th data-i18n="edit_th_att_type">Tipo MIME</th>
+              <th data-i18n="edit_th_att_size">Dimensione</th>
+            </tr>
+          </thead>
+          <tbody id="editAttachmentsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card hidden" id="editTagsCard">
+      <div class="card-title"><span class="icon">🗂️</span> <span data-i18n="edit_tags_card">Tag MKV</span></div>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.6rem" data-i18n="edit_tags_note">Tag globali presenti nel file (Encoded by, Comment, ecc.)</p>
+      <div id="editTagsBody"></div>
+      <button class="btn btn-danger w-full mt-2" id="btnRemoveTags" onclick="doRemoveTags()" data-i18n="btn_remove_tags">
+        🗑️ Rimuovi tutti i tag
+      </button>
+    </div>
+
+    <button class="btn btn-success w-full" id="btnEditApply" onclick="doEditApply()" data-i18n="btn_edit_apply">
+      ✏️ Applica modifiche
+    </button>
+
+    <div id="editResult" class="hidden mt-2"></div>
+
+  </div>
+
+  <!-- Batch progress section -->
+  <div id="editBatchProgressSection" class="hidden">
+    <div class="card">
+      <div class="card-title">📝 <span data-i18n="edit_batch_progress_title">Applicazione modifiche</span></div>
+      <div id="editBatchCounter" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.6rem"></div>
+      <div id="editBatchEpisodeList" style="display:flex;flex-direction:column;gap:0.3rem;max-height:300px;overflow-y:auto"></div>
+      <div id="editBatchResultMsg" class="hidden mt-2"></div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /editSection -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MUX
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="muxSection" class="hidden">
+<div class="main-container">
+
+  <nav class="steps-nav" id="muxStepsNav">
+    <div class="step-pill active" data-mux-step="1"><span class="step-num">1</span> <span data-i18n="mux_step_file">File</span></div>
+    <div class="step-pill" data-mux-step="2"><span class="step-num">2</span> <span data-i18n="mux_step_tracks">Tracce</span></div>
+    <div class="step-pill" data-mux-step="3"><span class="step-num">3</span> <span data-i18n="mux_step_mux">Mux</span></div>
+  </nav>
+
+  <!-- ── Step 1: File list ──────────────────────────────────────────────── -->
+  <div id="muxStep1" class="step-section">
+    <div class="card">
+      <div class="card-title"><span class="icon">🎬</span> <span data-i18n="mux_files_card">File MKV sorgenti</span></div>
+      <div id="muxFileList" style="margin-bottom:0.5rem"></div>
+      <button class="btn btn-ghost w-full" id="btnMuxAddFile"
+              onclick="openBrowser('muxAddFile')" data-i18n="btn_mux_add">+ Aggiungi file MKV</button>
+    </div>
+    <button class="btn btn-primary w-full" id="btnMuxAnalyze" disabled
+            onclick="mxAnalyzeAll()" data-i18n="btn_mux_analyze">Analizza tracce →</button>
+  </div>
+
+  <!-- ── Step 2: Track table + output + chapters ───────────────────────── -->
+  <div id="muxStep2" class="step-section hidden">
+    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(1)" data-i18n="btn_back">← Indietro</button>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">📋</span> <span data-i18n="mux_tracks_card">Tracce</span>
+      </div>
+      <div class="bulk-controls" id="muxBulkControls"></div>
+      <div class="track-table-wrap">
+        <table class="track-table" id="muxTrackTable">
+          <thead>
+            <tr>
+              <th data-i18n="mux_th_num">#</th>
+              <th data-i18n="mux_th_type">Tipo</th>
+              <th data-i18n="mux_th_from">Da</th>
+              <th data-i18n="mux_th_codec">Codec</th>
+              <th data-i18n="mux_th_lang">Lingua</th>
+              <th data-i18n="mux_th_title">Titolo</th>
+              <th data-i18n="mux_th_info">Info</th>
+              <th data-i18n="mux_th_delay">Delay ms</th>
+              <th data-i18n="mux_th_default">Default</th>
+              <th data-i18n="mux_th_forced">Forced</th>
+              <th data-i18n="mux_th_include">Includi</th>
+            </tr>
+          </thead>
+          <tbody id="muxTrackBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📂</span> <span data-i18n="mux_output_card">Output</span></div>
+      <div class="field-group">
+        <label class="field-label" data-i18n="mux_output_dir_label">Cartella destinazione</label>
+        <div class="file-picker" id="muxOutputDirPicker"
+             onclick="openBrowser('muxOutputDir', {filter:'dir'})">
+          <span class="file-picker-icon">📁</span>
+          <div class="file-picker-text">
+            <div class="file-picker-value placeholder" id="muxOutputDirVal">Tocca per sfogliare…</div>
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label" data-i18n="output_title_label">Titolo MKV</label>
+        <input type="text" id="muxOutputTitle" data-i18n-placeholder="output_title_placeholder"
+               placeholder="Titolo del film (tag container)">
+      </div>
+      <div class="field-group" style="margin-bottom:0">
+        <label class="field-label" data-i18n="mux_output_name_label">Nome file output</label>
+        <input type="text" id="muxOutputName" placeholder="output.mkv">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📖</span> <span data-i18n="chapters_card">Capitoli</span></div>
+      <div class="chapters-options">
+        <label class="chapters-option">
+          <input type="radio" name="muxChaptersMode" value="from_first" checked
+                 onchange="mxOnChaptersModeChange(this.value)">
+          <span id="muxChLabelFromFirst" data-i18n="mux_ch_from_first">Mantieni dal primo file</span>
+        </label>
+        <label class="chapters-option">
+          <input type="radio" name="muxChaptersMode" value="generate"
+                 onchange="mxOnChaptersModeChange(this.value)">
+          <span data-i18n="ch_generate">Genera automaticamente</span>
+        </label>
+        <label class="chapters-option">
+          <input type="radio" name="muxChaptersMode" value="none"
+                 onchange="mxOnChaptersModeChange(this.value)">
+          <span data-i18n="ch_none">Nessun capitolo</span>
+        </label>
+      </div>
+      <div id="muxChaptersIntervalRow" class="hidden" style="margin-top:0.75rem">
+        <div class="field-row" style="align-items:center;gap:0.6rem">
+          <label class="field-label" style="margin:0;white-space:nowrap" data-i18n="ch_every">Ogni</label>
+          <input type="number" id="muxChaptersInterval" value="10" min="1" max="120"
+                 style="width:70px" onchange="mxUpdateChaptersEstimate()">
+          <span style="font-size:0.85rem;color:var(--text-muted)" data-i18n="ch_minutes">minuti</span>
+          <span id="muxChaptersEstimate"
+                style="font-size:0.82rem;color:var(--text-muted);margin-left:0.5rem"></span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-success w-full" id="btnMuxStart"
+            onclick="mxStartMux()" data-i18n="btn_mux_start">🚀 Avvia Mux</button>
+  </div>
+
+  <!-- ── Step 3: Progress + result ─────────────────────────────────────── -->
+  <div id="muxStep3" class="step-section hidden">
+    <div class="card" id="muxProgressCard">
+      <div class="card-title"><span class="icon">⚙️</span> <span data-i18n="mux_progress_card">Mux in corso</span></div>
+      <div id="muxPhaseLabel"
+           style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem" data-i18n="mux_progress_starting">Avvio…</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="muxProgressBar" style="width:0%"></div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem"
+           id="muxProgressPct">0%</div>
+      <div class="log-output mt-2" id="muxLogOutput"></div>
+      <div id="muxErrorAlert" class="alert alert-danger mt-2 hidden"></div>
+    </div>
+
+    <div id="muxResultCard" class="card result-card hidden">
+      <div class="result-ok-icon">✅</div>
+      <div class="result-filename" id="muxResultFilename"></div>
+      <div class="result-size" id="muxResultSize"></div>
+      <ul class="track-summary-list" id="muxResultTrackList"></ul>
+      <div class="flex gap-1 mt-2">
+        <button class="btn btn-ghost btn-sm" onclick="mxGoStep(2)" data-i18n="mux_back_tracks">← Torna alle tracce</button>
+        <button class="btn btn-ghost btn-sm" onclick="mxReset()" data-i18n="mux_new">↺ Nuovo Mux</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /muxSection -->
+
+<!-- ── OpenSubtitles search results modal ───────────────────────────────── -->
+<dialog id="osSearchModal" class="info-modal">
+  <div class="info-modal-inner" style="max-width:640px;width:92vw">
+    <div class="info-modal-header">
+      <div class="info-modal-title" data-i18n="os_modal_title">🔍 Risultati OpenSubtitles</div>
+      <button class="modal-close-btn" onclick="document.getElementById('osSearchModal').close()">✕</button>
+    </div>
+    <div id="osSearchBody" style="padding:0.75rem 1rem;max-height:60vh;overflow-y:auto"></div>
+  </div>
+</dialog>
+
+<!-- ── OpenSubtitles credentials inline modal ───────────────────────────── -->
+<dialog id="osCredsModal" class="info-modal">
+  <div class="info-modal-inner">
+    <div class="info-modal-header">
+      <div class="info-modal-title" data-i18n="os_creds_modal_title">⚙ Configura OpenSubtitles</div>
+      <button class="modal-close-btn" onclick="document.getElementById('osCredsModal').close()">✕</button>
+    </div>
+    <div style="padding:0.75rem 1rem">
+      <p id="osCredsDesc" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem">
+        Account gratuito su
+        <a href="https://www.opensubtitles.com" target="_blank" rel="noopener">opensubtitles.com</a>.
+        API key dalla pagina
+        <a href="https://www.opensubtitles.com/consumers" target="_blank" rel="noopener">Consumers</a>.
+      </p>
+      <div class="field-group">
+        <label class="field-label">Username</label>
+        <input type="text" id="osCredsUsername" placeholder="es. salvo89" autocomplete="username">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <input type="password" id="osCredsPassword" autocomplete="current-password">
+      </div>
+      <div class="field-group" style="margin-bottom:0.75rem">
+        <label class="field-label">API Key</label>
+        <input type="text" id="osCredsApiKey" placeholder="aRbFoQ1u…" autocomplete="off">
+      </div>
+      <button class="btn btn-primary w-full" id="btnOsCredsSave" onclick="osSaveCreds()" data-i18n="os_creds_btn">
+        💾 Salva e verifica
+      </button>
+      <div id="osCredsResult" class="hidden mt-2"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ── File browser modal (shared) ──────────────────────────────────────── -->
+<div class="modal-overlay" id="browserOverlay" onclick="closeBrowser(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="browserTitle" data-i18n="browser_select_file_title">Seleziona file</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeBrowserModal()">✕</button>
+    </div>
+    <div class="modal-path" id="browserPath">/storage</div>
+    <div class="modal-body">
+      <ul class="browser-list" id="browserList"></ul>
+    </div>
+    <div class="modal-footer" id="browserFooter">
+      <button class="btn btn-ghost btn-sm" onclick="closeBrowserModal()" data-i18n="browser_cancel">Annulla</button>
+      <button class="btn btn-primary btn-sm hidden" id="btnSelectDir" onclick="selectCurrentDir()" data-i18n="browser_select_dir">
+        Seleziona questa cartella
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

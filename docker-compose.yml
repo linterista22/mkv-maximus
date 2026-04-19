@@ -1,0 +1,46 @@
+name: mkv-maximus
+services:
+  mkv_maximus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mkv_maximus:latest
+    container_name: mkv_maximus
+    ports:
+      - "7788:7788"
+    volumes:
+      - /path/to/your/media:/storage:rw      # ← change to your media folder
+      - /DATA/AppData/mkv-maximus/data:/app/data
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    labels:
+      icon: https://raw.githubusercontent.com/linterista22/mkv-maximus/main/app/static/icon.png
+    x-casaos:
+      volumes:
+        - container: /storage
+          description:
+            en_us: Media storage (read/write)
+        - container: /app/data
+          description:
+            en_us: App data and history
+
+networks:
+  default:
+    name: mkv-maximus_default
+
+x-casaos:
+  architectures:
+    - amd64
+  author: linterista22
+  category: Media
+  description:
+    en_us: Web app to sync and mux audio/subtitle tracks between MKV files. Automates adding ITA audio and subtitles from a source MKV to a target MKV, with automatic sync offset calculation via audio-offset-finder.
+  icon: https://raw.githubusercontent.com/linterista22/mkv-maximus/main/app/static/icon.png
+  index: /
+  is_uncontrolled: false
+  main: mkv_maximus
+  port_map: "7788"
+  scheme: http
+  title:
+    en_us: MKV Maximus
