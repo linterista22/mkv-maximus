@@ -144,6 +144,7 @@ const STRINGS = {
     probe_th_video: 'Video',
     probe_th_resolution: 'Risoluzione',
     probe_th_audio: 'Audio',
+    probe_th_sintesi: 'Sintesi tracce',
     probe_th_size: 'Dimensione',
     probe_th_detail: 'Dettaglio',
     probe_download_btn: '💾 Scarica',
@@ -201,6 +202,7 @@ const STRINGS = {
     js_edit_batch_no_analyze: 'Analizza prima le tracce.',
     // Mux sub-app
     mux_step_file: 'File',
+    mux_step_actions: 'Azioni',
     mux_step_tracks: 'Tracce',
     mux_step_mux: 'Mux',
     mux_files_card: '🎬 File MKV sorgenti',
@@ -333,6 +335,9 @@ const STRINGS = {
     js_srt_ready: '✓ SRT pronto',
     js_download_failed: 'Download fallito: ',
     js_use_this: 'Usa questo',
+    os_standalone_title: 'Scarica sottotitolo da OpenSubtitles',
+    os_dl_lang_label: 'Lingua:',
+    os_standalone_from: 'Da file:',
     js_fill_all: '✗ Compila tutti i campi',
     js_creds_saved: '✓ Credenziali salvate',
     js_test_connection: '🔗 Test connessione',
@@ -511,6 +516,7 @@ const STRINGS = {
     probe_th_video: 'Video',
     probe_th_resolution: 'Resolution',
     probe_th_audio: 'Audio',
+    probe_th_sintesi: 'Track summary',
     probe_th_size: 'Size',
     probe_th_detail: 'Detail',
     probe_download_btn: '💾 Download',
@@ -568,6 +574,7 @@ const STRINGS = {
     js_edit_batch_no_analyze: 'Analyze tracks first.',
     // Mux sub-app
     mux_step_file: 'File',
+    mux_step_actions: 'Actions',
     mux_step_tracks: 'Tracks',
     mux_step_mux: 'Mux',
     mux_files_card: '🎬 Source MKV files',
@@ -700,6 +707,9 @@ const STRINGS = {
     js_srt_ready: '✓ SRT ready',
     js_download_failed: 'Download failed: ',
     js_use_this: 'Use this',
+    os_standalone_title: 'Download subtitle from OpenSubtitles',
+    os_dl_lang_label: 'Language:',
+    os_standalone_from: 'From file:',
     js_fill_all: '✗ Fill in all fields',
     js_creds_saved: '✓ Credentials saved',
     js_test_connection: '🔗 Test connection',
@@ -1611,7 +1621,14 @@ function updateAudioAction(sel) {
   if (t2) {
     t2.action = val;
     t2.include = (val !== 'discard');
+    if (val === 'convert') {
+      const sa = S.analysis?.suggested_actions?.find(a => a.ffprobe_index === ffIdx && a.source === src && a.type === 'audio');
+      if (sa) { t2.codec_out = sa.action.codec_out; t2.bitrate_out = sa.action.bitrate_out || null; t2.downmix = sa.action.downmix || null; }
+    } else {
+      t2.codec_out = null; t2.bitrate_out = null; t2.downmix = null;
+    }
   }
+  renderTrackTable();
 }
 
 function applyAllAudioAction(action) {
@@ -1671,22 +1688,12 @@ function updateOcrLang(sel) {
 function acceptAllActions() {
   if (!S.analysis) return;
   S.analysis.suggested_actions.forEach(a => {
-    const t2 = S.trackTable.find(
-      t => t.ffprobe_index === a.ffprobe_index && t.source === a.source
+    const sel = document.querySelector(
+      `select[data-action-ffidx="${a.ffprobe_index}"][data-action-src="${a.source}"]`
     );
-    if (!t2) return;
-
-    if (a.type === 'subtitle_vobsub') {
-      // action handled by updateSubAction
-    } else {
-      const sa = a.action;
-      if (sa.action === 'discard') {
-        t2.include = false;
-        t2.action = 'discard';
-      } else if (sa.action === 'convert') {
-        t2.action = 'convert';
-      }
-    }
+    if (!sel) return;
+    if (a.type === 'subtitle_vobsub') updateSubAction(sel);
+    else updateAudioAction(sel);
   });
 
   document.getElementById('actionsPanel').classList.add('hidden');
@@ -1950,12 +1957,20 @@ function renderTrackTable() {
         : (track.language ? `<span class="badge badge-lang">${esc(track.language.toUpperCase())}</span>` : '—');
 
     const codecDisplay = track.mkv_codec || track.codec || '?';
+    let codecExtra = '';
+    if (track.action === 'convert' && track.codec_out) {
+      codecExtra = ` <span class="badge badge-convert" style="font-size:0.7rem">→ ${esc(track.codec_out.toUpperCase())}</span>`;
+    } else if (track.converted_path) {
+      codecExtra = ` <span class="badge badge-success" style="font-size:0.7rem">SRT ✓</span>`;
+    } else if (track.action === 'ocr') {
+      codecExtra = ` <span class="badge badge-convert" style="font-size:0.7rem">→ SRT (OCR)</span>`;
+    }
 
     tr.innerHTML = `
       <td>${idx}</td>
       <td>${typeIcon(track.type)} ${track.type}</td>
       <td>${srcBadge}</td>
-      <td style="white-space:nowrap">${esc(codecDisplay)}</td>
+      <td style="white-space:nowrap">${esc(codecDisplay)}${codecExtra}</td>
       <td>${langBadge}</td>
       <td>${isAttachment
         ? `<span style="font-size:0.85rem">${esc(track.title || '')}</span>`
@@ -3013,6 +3028,86 @@ function onProbeModeChange(mode) {
   document.getElementById('probeFolderSection').classList.toggle('hidden', mode !== 'folder');
 }
 
+/* ── PR2: Probe compact syntesis helpers ─────────────────────────────────── */
+
+function _psSub(fmt) {
+  const map = { 'UTF-8': 'SRT', 'ASS': 'ASS', 'SSA': 'SSA', 'PGS': 'PGS', 'VOBSUB': 'VobSub', 'DVD VIDEO': 'VobSub' };
+  return map[(fmt || '').toUpperCase()] || fmt || '?';
+}
+
+function _psCh(n) {
+  const m = { 1: 'mono', 2: 'stereo', 6: '5.1', 7: '6.1', 8: '7.1' };
+  return m[n] || (n ? `${n}ch` : '');
+}
+
+function _psBuildTracks(tracks, formatter, maxShow) {
+  const shown = tracks.slice(0, maxShow);
+  const rest  = tracks.length - maxShow;
+  let html = shown.map(t => `<span class="ps-track">${formatter(t)}</span>`).join('');
+  if (rest > 0) html += ` <span class="badge badge-warn" style="font-size:0.7rem">+${rest}</span>`;
+  return html;
+}
+
+function buildProbeSyntesisHtml(vid, audios, subs) {
+  let vidLine = '—';
+  if (vid) {
+    const codec = vid.Format || '?';
+    const res   = (vid.Width && vid.Height) ? `${vid.Width}×${vid.Height}` : '';
+    const fps   = vid.FrameRate ? `${parseFloat(vid.FrameRate).toFixed(3).replace(/\.?0+$/, '')} fps` : '';
+    const br    = vid.BitRate ? `${Math.round(parseInt(vid.BitRate) / 1000000 * 10) / 10} Mbps` : '';
+    vidLine = [codec, res, fps, br].filter(Boolean).join(' · ');
+  }
+
+  const audioHtml = _psBuildTracks(audios, t => {
+    const lang  = t.Language ? `<span class="badge badge-lang" style="font-size:0.7rem">${esc((t.Language||'').slice(0,3).toUpperCase())}</span>` : '';
+    const codec = t.Format || '?';
+    const ch    = _psCh(parseInt(t['Channel(s)']) || parseInt(t.Channels) || 0);
+    const br    = t.BitRate ? `${Math.round(parseInt(t.BitRate) / 1000)}k` : '';
+    const title = t.Title ? `<em style="color:var(--text-muted);font-size:0.75rem">${esc(t.Title)}</em>` : '';
+    return [lang, codec, ch, br, title].filter(Boolean).join(' ');
+  }, 2);
+
+  const subHtml = _psBuildTracks(subs, t => {
+    const lang   = t.Language ? `<span class="badge badge-lang" style="font-size:0.7rem">${esc((t.Language||'').slice(0,3).toUpperCase())}</span>` : '';
+    const codec  = _psSub(t.Format);
+    const title  = t.Title ? `<em style="color:var(--text-muted);font-size:0.75rem">${esc(t.Title)}</em>` : '';
+    const forced = (t.Forced === 'Yes') ? `<span class="badge badge-forced" style="font-size:0.7rem">F</span>` : '';
+    return [lang, codec, title, forced].filter(Boolean).join(' ');
+  }, 2);
+
+  const rows = [
+    `<div class="ps-row"><span class="ps-icon">🎬</span><span>${esc(vidLine)}</span></div>`,
+    audios.length ? `<div class="ps-row"><span class="ps-icon">🔊</span><span>${audioHtml}</span></div>` : '',
+    subs.length   ? `<div class="ps-row"><span class="ps-icon">💬</span><span>${subHtml}</span></div>` : '',
+  ].filter(Boolean).join('');
+  return rows;
+}
+
+function buildProbeFolderSyntesisCell(f) {
+  const audios = f.audio_tracks || [];
+  const subs   = f.sub_tracks   || [];
+  if (!audios.length && !subs.length) return `<span style="color:var(--text-muted)">—</span>`;
+
+  const afmt = _psBuildTracks(audios, t => {
+    const lang  = t.language ? `<span class="badge badge-lang" style="font-size:0.68rem">${esc((t.language||'').slice(0,3).toUpperCase())}</span>` : '';
+    const codec = t.codec || '?';
+    const ch    = _psCh(t.channels || 0);
+    return [lang, codec, ch].filter(Boolean).join('\u202f');
+  }, 2);
+
+  const sfmt = _psBuildTracks(subs, t => {
+    const lang  = t.language ? `<span class="badge badge-lang" style="font-size:0.68rem">${esc((t.language||'').slice(0,3).toUpperCase())}</span>` : '';
+    const codec = _psSub(t.codec);
+    const forced = t.forced ? `<span class="badge badge-forced" style="font-size:0.68rem">F</span>` : '';
+    return [lang, codec, forced].filter(Boolean).join('\u202f');
+  }, 2);
+
+  const parts = [];
+  if (audios.length) parts.push(`🔊 ${afmt}`);
+  if (subs.length)   parts.push(`💬 ${sfmt}`);
+  return parts.join('<br>');
+}
+
 async function doProbeFile(path) {
   const outputSection = document.getElementById('probeOutputSection');
   const pre = document.getElementById('probeOutput');
@@ -3021,6 +3116,7 @@ async function doProbeFile(path) {
 
   _probeData = {};
   document.getElementById('probeTitleBadge').classList.add('hidden');
+  document.getElementById('probeSyntesisCard').classList.add('hidden');
   try {
     const [rText, rJson] = await Promise.all([
       fetch('/api/probe', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -3042,6 +3138,21 @@ async function doProbeFile(path) {
     } else {
       badge.classList.add('hidden');
     }
+
+    // PR2: compact syntesis card
+    const synCard = document.getElementById('probeSyntesisCard');
+    try {
+      const mi = JSON.parse(dJson.output);
+      const tkList = mi?.media?.track || [];
+      const vid    = tkList.find(t => t['@type'] === 'Video');
+      const audios = tkList.filter(t => t['@type'] === 'Audio');
+      const subs   = tkList.filter(t => t['@type'] === 'Text');
+      synCard.innerHTML = buildProbeSyntesisHtml(vid, audios, subs);
+      synCard.classList.remove('hidden');
+    } catch (_) {
+      synCard.classList.add('hidden');
+    }
+
     showProbeOutput();
   } catch (e) {
     pre.textContent = t('js_error_prefix') + e.message;
@@ -3130,7 +3241,7 @@ function renderProbeFolderResults(data) {
       <td>${esc(f.duration)}</td>
       <td>${esc(f.video_codec)}</td>
       <td>${esc(f.resolution)}</td>
-      <td>${esc(f.audio_codec)}</td>
+      <td style="font-size:0.75rem;line-height:1.5">${buildProbeFolderSyntesisCell(f)}</td>
       <td style="white-space:nowrap">${esc(f.size_human)}</td>
       <td></td>
     `;
@@ -3704,6 +3815,7 @@ async function mxAnalyzeAll() {
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> ${t('js_analyzing')}`;
   MX.tracks = [];
+  MX.suggestedActions = [];
 
   try {
     for (let i = 0; i < MX.files.length; i++) {
@@ -3719,6 +3831,7 @@ async function mxAnalyzeAll() {
         MX.tracks.push({
           source_file_idx: i,
           mkvmerge_id:     tr.mkvmerge_id,
+          ffprobe_index:   tr.ffprobe_index ?? -1,
           type:            tr.codec_type || 'audio',
           codec:           tr.codec_name || tr.codec || '',
           mkv_codec:       tr.mkv_codec || null,
@@ -3733,7 +3846,40 @@ async function mxAnalyzeAll() {
           forced:          tr.forced  || false,
           include:         true,
           delay_ms:        0,
+          action:          'passthrough',
+          converted_path:  null,
+          ocr_lang:        tr.language || 'ita',
+          codec_out:       null,
+          bitrate_out:     null,
+          downmix:         null,
         });
+
+        // Raccoglie azioni suggerite per il pannello AV1/AV2
+        const sa = tr.suggested_action;
+        if (sa && sa.action && sa.action !== 'passthrough') {
+          MX.suggestedActions.push({
+            ffprobe_index:   tr.ffprobe_index ?? -1,
+            source_file_idx: i,
+            type:            tr.codec_type,
+            codec:           tr.codec_name || '',
+            language:        tr.language,
+            channels:        tr.channels,
+            action:          sa,
+          });
+        }
+        const ssa = tr.suggested_sub_action;
+        if (ssa && ssa.action) {
+          MX.suggestedActions.push({
+            ffprobe_index:   tr.ffprobe_index ?? -1,
+            source_file_idx: i,
+            type:            'subtitle_vobsub',
+            codec:           tr.codec_name || '',
+            language:        tr.language,
+            forced:          tr.forced || false,
+            title:           tr.title || '',
+            action:          ssa,
+          });
+        }
       }
       for (const att of (data.attachments || [])) {
         MX.tracks.push({
@@ -3779,7 +3925,9 @@ async function mxAnalyzeAll() {
     }
 
     mxRenderTrackTable();
-    mxGoStep(2);
+    mxRenderActionsPanel(MX.suggestedActions);
+    mxOsStandaloneUpdateFileSel();
+    mxGoStep(MX.suggestedActions.length > 0 ? 2 : 3);
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
   } finally {
@@ -3802,6 +3950,12 @@ function mxRenderTrackTable() {
     const isSub = tr.type === 'subtitle';
     const isAttach = tr.type === 'attachment';
     const codecDisp = tr.mkv_codec || tr.codec || '?';
+    let mxCodecExtra = '';
+    if (tr.action === 'convert' && tr.codec_out) {
+      mxCodecExtra = ` <span class="badge badge-convert" style="font-size:0.7rem">→ ${esc(tr.codec_out.toUpperCase())}</span>`;
+    } else if (tr.converted_path) {
+      mxCodecExtra = ` <span class="badge badge-success" style="font-size:0.7rem">SRT ✓</span>`;
+    }
     const infoStr = mxBuildInfoStr(tr);
 
     const row = document.createElement('tr');
@@ -3811,7 +3965,7 @@ function mxRenderTrackTable() {
       <td>${idx}</td>
       <td>${tIcon} ${tr.type}</td>
       <td><span class="src-badge ${colorClass}" title="${esc(fname)}">${esc(fshort)}</span></td>
-      <td style="white-space:nowrap">${esc(codecDisp)}</td>
+      <td style="white-space:nowrap">${esc(codecDisp)}${mxCodecExtra}</td>
       <td>${(!isVideo && !isAttach)
         ? `<input type="text" value="${esc(tr.language)}" style="width:55px;font-size:0.82rem"
              placeholder="ita" onchange="MX.tracks[${idx}].language=this.value">`
@@ -3944,6 +4098,7 @@ async function mxStartMux() {
         track_table: MX.tracks.map(tr => ({
           source_file_idx: tr.source_file_idx,
           mkvmerge_id:     tr.mkvmerge_id,
+          ffprobe_index:   tr.ffprobe_index ?? -1,
           type:            tr.type,
           codec:           tr.codec,
           language:        tr.language || null,
@@ -3952,7 +4107,12 @@ async function mxStartMux() {
           forced:          tr.forced,
           include:         tr.include,
           delay_ms:        tr.delay_ms || 0,
-          action:          'passthrough',
+          action:          tr.action || 'passthrough',
+          converted_path:  tr.converted_path || null,
+          ocr_lang:        tr.ocr_lang || null,
+          codec_out:       tr.codec_out || null,
+          bitrate_out:     tr.bitrate_out || null,
+          downmix:         tr.downmix || null,
         })),
         chapters_mode:     chaptersMode,
         chapters_interval: chaptersInterval,
@@ -3961,7 +4121,7 @@ async function mxStartMux() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || t('js_error'));
 
-    mxGoStep(3);
+    mxGoStep(4);
     mxConnectSSE();
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -4045,6 +4205,7 @@ function mxReset() {
   if (MX.sseSource) { MX.sseSource.close(); MX.sseSource = null; }
   MX.files = [];
   MX.tracks = [];
+  MX.suggestedActions = [];
   MX.outputDir = '';
   MX.chaptersDuration = 0;
 
@@ -4066,9 +4227,516 @@ function mxReset() {
   const radio = document.querySelector('input[name="muxChaptersMode"][value="from_first"]');
   if (radio) { radio.checked = true; mxOnChaptersModeChange('from_first'); }
   _setChapterLabel('muxChLabelFromFirst', 'mux_ch_from_first', null);
+  const ap = document.getElementById('muxActionsPanel');
+  if (ap) { ap.innerHTML = ''; ap.classList.add('hidden'); }
+  const mxOsBody = document.getElementById('mxOsStandaloneBody');
+  if (mxOsBody) { mxOsBody.style.display = 'none'; document.getElementById('mxOsStandaloneToggle').textContent = '▾'; }
+  const mxOsSt = document.getElementById('mxOsStandaloneStatus');
+  if (mxOsSt) mxOsSt.textContent = '';
 
   mxRenderFileList();
   mxGoStep(1);
+}
+
+/* ── AV1/AV2: pannello azioni suggerite Mux ──────────────────────────────── */
+
+function mxFindTrack(ffprobe_index, source_file_idx) {
+  return MX.tracks.find(t => t.ffprobe_index === ffprobe_index
+                           && t.source_file_idx === source_file_idx);
+}
+
+function mxRenderActionsPanel(actions) {
+  const panel = document.getElementById('muxActionsPanel');
+  if (!actions || actions.length === 0) { panel.classList.add('hidden'); return; }
+
+  panel.innerHTML = '';
+  panel.classList.remove('hidden');
+
+  const div = document.createElement('div');
+  div.className = 'actions-panel';
+  div.innerHTML = `<div class="actions-panel-header">${t('js_actions_header')}</div>`;
+
+  const audioActions = actions.filter(a => a.type === 'audio');
+  const subActions   = actions.filter(a => a.type === 'subtitle_vobsub');
+
+  if (audioActions.length > 0) {
+    const bar = document.createElement('div');
+    bar.className = 'apply-all-bar';
+    bar.innerHTML = `
+      <span class="apply-all-label">${t('js_apply_all_audio')}</span>
+      <button class="btn btn-ghost btn-xs" onclick="mxApplyAllAudioAction('passthrough')">${t('js_passthrough')}</button>
+      <button class="btn btn-ghost btn-xs" onclick="mxApplyAllAudioAction('convert')">${t('js_convert')}</button>
+      <button class="btn btn-ghost btn-xs apply-all-danger" onclick="mxApplyAllAudioAction('discard')">${t('js_discard')}</button>`;
+    div.appendChild(bar);
+  }
+
+  audioActions.forEach(a => {
+    const sa = a.action;
+    const isDiscard = sa.action === 'discard';
+    const fi = a.source_file_idx;
+    const fname = MX.files[fi]?.name || `File ${fi + 1}`;
+    const colorClass = `src-f${fi % 5}`;
+    const langBadge = a.language ? `<span class="badge badge-lang">${esc(a.language.toUpperCase())}</span>` : '';
+    const srcBadge  = `<span class="src-badge ${colorClass}" title="${esc(fname)}">F${fi + 1}</span>`;
+    const audioOpts = isDiscard
+      ? `<option value="passthrough" selected>${t('js_passthrough')}</option>
+         <option value="discard">${t('js_discard')}</option>`
+      : `<option value="convert" ${sa.action==='convert'?'selected':''}>${t('js_convert')}</option>
+         <option value="passthrough" ${sa.action==='passthrough'?'selected':''}>${t('js_passthrough')}</option>
+         <option value="discard">${t('js_discard')}</option>`;
+
+    const row = document.createElement('div');
+    row.className = 'action-row';
+    row.innerHTML = `
+      <div class="action-row-top">
+        ${srcBadge} <strong>[Audio]</strong>
+        <span class="badge badge-convert">⚠ ${esc(a.codec || '')}</span>
+        ${langBadge}
+        ${a.channels ? `<span class="badge badge-lang">${a.channels}ch</span>` : ''}
+        <span style="font-size:0.8rem;color:var(--text-muted)">→ <strong>${esc(sa.label||'')}</strong></span>
+      </div>
+      <div class="action-row-controls">
+        <label style="font-size:0.8rem;color:var(--text-muted)">${t('js_action_label')}</label>
+        <select data-mx-ffidx="${a.ffprobe_index}" data-mx-fidx="${fi}" onchange="mxUpdateAudioAction(this)">
+          ${audioOpts}
+        </select>
+      </div>
+      ${sa.warn_atmos ? `<div class="action-warn">${t('js_atmos_warn')}</div>` : ''}
+      ${sa.downmix ? `<div class="action-warn">${t('js_downmix_warn_1')}${esc(sa.downmix)}${t('js_downmix_warn_2')}</div>` : ''}`;
+    div.appendChild(row);
+  });
+
+  if (subActions.length > 0) {
+    const hasUnsupported = subActions.some(a => a.action.action === 'remux');
+    const bar = document.createElement('div');
+    bar.className = 'apply-all-bar';
+    bar.innerHTML = `
+      <span class="apply-all-label">${t('js_apply_all_sub')}</span>
+      <button class="btn btn-ghost btn-xs" onclick="mxApplyAllSubAction('passthrough')">${t('js_remux_all')}</button>
+      <button class="btn btn-ghost btn-xs" ${hasUnsupported ? `disabled title="${t('js_unsupported_ocr_title')}"` : ''}
+              onclick="mxApplyAllSubAction('ocr')">${t('js_convert_all_ocr')}</button>
+      <button class="btn btn-ghost btn-xs apply-all-danger" onclick="mxApplyAllSubAction('discard')">${t('js_discard_all')}</button>`;
+    div.appendChild(bar);
+  }
+
+  subActions.forEach(a => {
+    const ssa = a.action;
+    const isUnsupported = ssa.action === 'remux';
+    const fi = a.source_file_idx;
+    const fname = MX.files[fi]?.name || `File ${fi + 1}`;
+    const colorClass = `src-f${fi % 5}`;
+    const langBadge = a.language
+      ? `<span class="badge badge-lang">${esc(a.language.toUpperCase())}</span>`
+      : `<span class="badge badge-warn">${t('js_unknown_lang_badge')}</span>`;
+    const srcBadge = `<span class="src-badge ${colorClass}" title="${esc(fname)}">F${fi + 1}</span>`;
+    const dlCtrlId = `mxDlCtrl_${a.ffprobe_index}_${fi}`;
+    const downloadOpt = `<option value="download_srt">${t('js_dl_srt_option')}</option>`;
+    let subOpts, extraControls = '';
+    if (isUnsupported) {
+      subOpts = `${downloadOpt}
+        <option value="passthrough" selected>Remux as-is</option>
+        <option value="discard">${t('js_discard')}</option>`;
+    } else {
+      subOpts = `${downloadOpt}
+        <option value="ocr" ${ssa.action==='ocr'?'selected':''}>${t('js_convert')} (OCR)</option>
+        <option value="passthrough" ${ssa.action==='passthrough'?'selected':''}>Remux as-is</option>
+        <option value="discard">${t('js_discard')}</option>`;
+      extraControls = `
+        <span id="mxOcrLangCtrl_${a.ffprobe_index}_${fi}" style="display:inline-flex;align-items:center;gap:0.4rem">
+          <label style="font-size:0.8rem;color:var(--text-muted)">${t('js_ocr_lang_label')}</label>
+          <select data-mx-ocr-ffidx="${a.ffprobe_index}" data-mx-fidx="${fi}" onchange="mxUpdateOcrLang(this)">
+            <option value="ita" ${a.language==='ita'?'selected':''}>ita</option>
+            <option value="eng" ${a.language==='eng'?'selected':''}>eng</option>
+          </select>
+        </span>`;
+    }
+    const dlCtrl = `
+      <span id="${dlCtrlId}" style="display:none;align-items:center;gap:0.4rem">
+        <label style="font-size:0.8rem;color:var(--text-muted)">${t('js_dl_lang_label')}</label>
+        <select id="mxDlLang_${a.ffprobe_index}_${fi}" style="font-size:0.82rem">
+          <option value="it" ${(a.language==='ita'||a.language==='it')?'selected':''}>Italiano</option>
+          <option value="en" ${(a.language==='eng'||a.language==='en')?'selected':''}>English</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+        </select>
+        <button class="btn btn-ghost btn-xs" onclick="mxOsSearchSubtitles(${a.ffprobe_index},${fi})">
+          ${t('js_search_btn')}
+        </button>
+        <span id="mxDlStatus_${a.ffprobe_index}_${fi}" style="font-size:0.78rem;color:var(--text-muted)"></span>
+      </span>`;
+
+    const row = document.createElement('div');
+    row.className = 'action-row';
+    row.innerHTML = `
+      <div class="action-row-top">
+        ${srcBadge} <strong>[Sub (VobSub)]</strong>
+        <span class="badge badge-convert">⚠ VobSub</span>
+        ${langBadge}
+        ${a.forced ? '<span class="badge badge-forced">FORCED</span>' : ''}
+        ${a.title ? `<span style="font-size:0.78rem;color:var(--text-muted)">${esc(a.title)}</span>` : ''}
+        ${isUnsupported ? `<span style="font-size:0.78rem;color:var(--warning)">${t('js_unsupported_lang_note')}</span>` : ''}
+      </div>
+      <div class="action-row-controls">
+        <label style="font-size:0.8rem;color:var(--text-muted)">${t('js_action_label')}</label>
+        <select data-mx-ffidx="${a.ffprobe_index}" data-mx-fidx="${fi}" onchange="mxUpdateSubAction(this)">
+          ${subOpts}
+        </select>
+        ${extraControls}
+        ${dlCtrl}
+      </div>`;
+    div.appendChild(row);
+  });
+
+  const acceptBtn = document.createElement('div');
+  acceptBtn.style.cssText = 'padding:0.75rem 1rem; border-top: 1px solid var(--border)';
+  acceptBtn.innerHTML = `<button class="btn btn-primary w-full" onclick="mxAcceptAllActions()">${t('js_accept_all_btn')}</button>`;
+  div.appendChild(acceptBtn);
+  panel.appendChild(div);
+}
+
+function mxUpdateAudioAction(sel) {
+  const ffIdx = parseInt(sel.dataset.mxFfidx);
+  const fi    = parseInt(sel.dataset.mxFidx);
+  const val   = sel.value;
+  const tr    = mxFindTrack(ffIdx, fi);
+  if (!tr) return;
+  tr.action  = val;
+  tr.include = (val !== 'discard');
+  if (val === 'convert') {
+    const sa = MX.suggestedActions.find(a => a.ffprobe_index === ffIdx && a.source_file_idx === fi && a.type === 'audio');
+    if (sa) { tr.codec_out = sa.action.codec_out; tr.bitrate_out = sa.action.bitrate_out || null; tr.downmix = sa.action.downmix || null; }
+  } else {
+    tr.codec_out = null; tr.bitrate_out = null; tr.downmix = null;
+  }
+  mxRenderTrackTable();
+}
+
+function mxUpdateSubAction(sel) {
+  const ffIdx = parseInt(sel.dataset.mxFfidx);
+  const fi    = parseInt(sel.dataset.mxFidx);
+  const val   = sel.value;
+  const tr    = mxFindTrack(ffIdx, fi);
+  if (tr) {
+    if (val === 'discard')      { tr.include = false; tr.action = 'discard'; tr.converted_path = null; }
+    else if (val === 'download_srt') { tr.include = true;  tr.action = 'ocr';  tr.converted_path = null; }
+    else                        { tr.include = true;  tr.action = val;   tr.converted_path = null; }
+  }
+  const ocrCtrl = document.getElementById(`mxOcrLangCtrl_${ffIdx}_${fi}`);
+  const dlCtrl  = document.getElementById(`mxDlCtrl_${ffIdx}_${fi}`);
+  if (ocrCtrl) ocrCtrl.style.display = (val === 'ocr') ? 'inline-flex' : 'none';
+  if (dlCtrl)  dlCtrl.style.display  = (val === 'download_srt') ? 'inline-flex' : 'none';
+}
+
+function mxUpdateOcrLang(sel) {
+  const ffIdx = parseInt(sel.dataset.mxOcrFfidx);
+  const fi    = parseInt(sel.dataset.mxFidx);
+  const tr    = mxFindTrack(ffIdx, fi);
+  if (tr) tr.ocr_lang = sel.value;
+}
+
+function mxApplyAllAudioAction(action) {
+  MX.suggestedActions.filter(a => a.type === 'audio').forEach(a => {
+    const tr = mxFindTrack(a.ffprobe_index, a.source_file_idx);
+    if (tr) { tr.action = action; tr.include = (action !== 'discard'); }
+    const sel = document.querySelector(`select[data-mx-ffidx="${a.ffprobe_index}"][data-mx-fidx="${a.source_file_idx}"]`);
+    if (sel && sel.closest('.action-row')) sel.value = action;
+  });
+}
+
+function mxApplyAllSubAction(action) {
+  MX.suggestedActions.filter(a => a.type === 'subtitle_vobsub').forEach(a => {
+    if (action === 'ocr' && a.action.action === 'remux') return;
+    const tr = mxFindTrack(a.ffprobe_index, a.source_file_idx);
+    if (tr) { tr.action = action; tr.include = (action !== 'discard'); }
+    const sel = document.querySelector(`select[data-mx-ffidx="${a.ffprobe_index}"][data-mx-fidx="${a.source_file_idx}"]`);
+    if (sel && sel.closest('.action-row')) sel.value = action;
+  });
+}
+
+function mxAcceptAllActions() {
+  MX.suggestedActions.forEach(a => {
+    const sel = document.querySelector(
+      `select[data-mx-ffidx="${a.ffprobe_index}"][data-mx-fidx="${a.source_file_idx}"]`
+    );
+    if (!sel) return;
+    if (a.type === 'audio') mxUpdateAudioAction(sel);
+    else mxUpdateSubAction(sel);
+  });
+  mxGoStep(3);
+}
+
+async function mxOsSearchSubtitles(ffprobe_index, file_idx) {
+  let cfg;
+  try { const r = await fetch('/api/config'); cfg = (await r.json()).opensubtitles || {}; }
+  catch { cfg = {}; }
+
+  if (!cfg.username) {
+    _osPendingSearch = () => mxOsSearchSubtitles(ffprobe_index, file_idx);
+    document.getElementById('osCredsModal').showModal();
+    return;
+  }
+
+  const langSel    = document.getElementById(`mxDlLang_${ffprobe_index}_${file_idx}`);
+  const language   = langSel ? langSel.value : 'it';
+  const statusEl   = document.getElementById(`mxDlStatus_${ffprobe_index}_${file_idx}`);
+  const mkv_path   = MX.files[file_idx]?.path;
+  if (!mkv_path) { alert(t('js_error')); return; }
+  if (statusEl) statusEl.textContent = t('js_searching');
+
+  try {
+    const r = await fetch('/api/subtitles/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: mkv_path, language }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (statusEl) statusEl.textContent = '';
+    mxOsShowResults(data.results || [], ffprobe_index, file_idx, data.hash, data.api_total);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '✗ ' + e.message;
+    alert(t('js_search_failed') + e.message);
+  }
+}
+
+function mxOsShowResults(results, ffprobe_index, file_idx, hash, apiTotal) {
+  const body = document.getElementById('osSearchBody');
+  if (results.length === 0) {
+    const hashInfo = hash ? `<br><small style="font-family:monospace;opacity:.7">hash: ${hash} · api_total: ${apiTotal ?? '?'}</small>` : '';
+    body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}${hashInfo}</p>`;
+    document.getElementById('osSearchModal').showModal();
+    return;
+  }
+  body.innerHTML = results.map((res, i) => `
+    <div style="border-bottom:1px solid var(--border);padding:0.6rem 0;display:flex;
+                align-items:flex-start;gap:0.75rem">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:600;word-break:break-all">${esc(res.filename)}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">
+          ${res.uploader ? `👤 ${esc(res.uploader)}` : ''}
+          ↓ ${res.downloads} · ★ ${res.rating}
+          ${res.hearing_impaired ? '· SDH' : ''}
+          ${res.hash_match ? '· <span style="color:var(--success)">hash ✓</span>' : ''}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-xs"
+              onclick="mxOsConfirmDownload(${res.file_id},'${esc(res.filename)}',${ffprobe_index},${file_idx},this)">
+        ${t('js_use_this')}
+      </button>
+    </div>`).join('');
+  document.getElementById('osSearchModal').showModal();
+}
+
+async function mxOsConfirmDownload(file_id, filename, ffprobe_index, file_idx, btn) {
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const r = await fetch('/api/subtitles/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_id, filename }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+
+    const tr = mxFindTrack(ffprobe_index, file_idx);
+    if (tr) { tr.action = 'ocr'; tr.converted_path = data.path; tr.include = true; }
+    mxRenderTrackTable();
+
+    const statusEl = document.getElementById(`mxDlStatus_${ffprobe_index}_${file_idx}`);
+    if (statusEl) { statusEl.textContent = t('js_srt_ready'); statusEl.style.color = 'var(--success)'; }
+    document.getElementById('osSearchModal').close();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = t('js_use_this');
+    alert(t('js_download_failed') + e.message);
+  }
+}
+
+/* ── OS1: Pannello standalone OpenSubtitles (Sync + Mux) ────────────────── */
+
+function toggleOsStandalonePanel() {
+  const body = document.getElementById('osStandaloneBody');
+  const tog  = document.getElementById('osStandaloneToggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  tog.textContent = open ? '▾' : '▴';
+}
+
+async function osStandaloneSearch() {
+  let cfg;
+  try { const r = await fetch('/api/config'); cfg = (await r.json()).opensubtitles || {}; }
+  catch { cfg = {}; }
+  if (!cfg.username || !cfg.api_key || !cfg.has_password) {
+    _osPendingSearch = () => osStandaloneSearch();
+    document.getElementById('osCredsModal').showModal();
+    return;
+  }
+  const lang     = document.getElementById('osStandaloneLang').value;
+  const statusEl = document.getElementById('osStandaloneStatus');
+  const mkv_path = S.videoFile;
+  if (!mkv_path) { alert(t('js_error')); return; }
+  if (statusEl) statusEl.textContent = t('js_searching');
+  try {
+    const r = await fetch('/api/subtitles/search', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: mkv_path, language: lang }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (statusEl) statusEl.textContent = '';
+    osStandaloneShowResults(data.results || [], data.hash, data.api_total, lang);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '✗ ' + e.message;
+  }
+}
+
+function osStandaloneShowResults(results, hash, apiTotal, lang) {
+  const body = document.getElementById('osSearchBody');
+  if (results.length === 0) {
+    const hashInfo = hash ? `<br><small style="font-family:monospace;opacity:.7">hash: ${hash} · api_total: ${apiTotal ?? '?'}</small>` : '';
+    body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}${hashInfo}</p>`;
+    document.getElementById('osSearchModal').showModal();
+    return;
+  }
+  body.innerHTML = results.map(res => `
+    <div style="border-bottom:1px solid var(--border);padding:0.6rem 0;display:flex;align-items:flex-start;gap:0.75rem">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+             title="${esc(res.filename)}">${esc(res.filename)}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem">
+          👤 ${esc(res.uploader || '?')} &nbsp;·&nbsp; ↓ ${res.downloads} &nbsp;·&nbsp; ★ ${res.rating}
+          ${res.hash_match ? '&nbsp;·&nbsp; <span style="color:var(--success)">hash ✓</span>' : ''}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm"
+              onclick="osStandaloneConfirm(${res.file_id},'${esc(res.filename)}','${lang}',this)">
+        ${t('js_use_this')}
+      </button>
+    </div>`).join('');
+  document.getElementById('osSearchModal').showModal();
+}
+
+async function osStandaloneConfirm(file_id, filename, lang, btn) {
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const r = await fetch('/api/subtitles/download', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_id, filename }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    const isoLang = { it:'ita', en:'eng', fr:'fra', de:'deu', es:'spa', pt:'por' }[lang] || lang;
+    S.trackTable.push({
+      type: 'subtitle', source: 'source', ffprobe_index: -99,
+      codec: 'SRT', mkv_codec: 'S_TEXT/UTF8',
+      language: isoLang, title: 'SRT (OS)',
+      forced: false, default: false, include: true, delay_ms: 0,
+      action: 'ocr', converted_path: data.path,
+    });
+    renderTrackTable();
+    const statusEl = document.getElementById('osStandaloneStatus');
+    if (statusEl) { statusEl.textContent = t('js_srt_ready'); statusEl.style.color = 'var(--success)'; }
+    document.getElementById('osSearchModal').close();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = t('js_use_this');
+    alert(t('js_download_failed') + e.message);
+  }
+}
+
+function toggleMxOsStandalonePanel() {
+  const body = document.getElementById('mxOsStandaloneBody');
+  const tog  = document.getElementById('mxOsStandaloneToggle');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  tog.textContent = open ? '▾' : '▴';
+}
+
+function mxOsStandaloneUpdateFileSel() {
+  const sel = document.getElementById('mxOsStandaloneFileSel');
+  if (!sel) return;
+  sel.innerHTML = MX.files.map((f, i) => `<option value="${i}">F${i+1}: ${esc(f.name)}</option>`).join('');
+}
+
+async function mxOsStandaloneSearch() {
+  let cfg;
+  try { const r = await fetch('/api/config'); cfg = (await r.json()).opensubtitles || {}; }
+  catch { cfg = {}; }
+  if (!cfg.username) {
+    _osPendingSearch = () => mxOsStandaloneSearch();
+    document.getElementById('osCredsModal').showModal();
+    return;
+  }
+  const lang    = document.getElementById('mxOsStandaloneLang').value;
+  const fileIdx = parseInt(document.getElementById('mxOsStandaloneFileSel')?.value) || 0;
+  const statusEl = document.getElementById('mxOsStandaloneStatus');
+  const mkv_path = MX.files[fileIdx]?.path;
+  if (!mkv_path) { alert(t('js_error')); return; }
+  if (statusEl) statusEl.textContent = t('js_searching');
+  try {
+    const r = await fetch('/api/subtitles/search', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: mkv_path, language: lang }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (statusEl) statusEl.textContent = '';
+    mxOsStandaloneShowResults(data.results || [], data.hash, data.api_total, lang, fileIdx);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '✗ ' + e.message;
+  }
+}
+
+function mxOsStandaloneShowResults(results, hash, apiTotal, lang, fileIdx) {
+  const body = document.getElementById('osSearchBody');
+  if (results.length === 0) {
+    const hashInfo = hash ? `<br><small style="font-family:monospace;opacity:.7">hash: ${hash} · api_total: ${apiTotal ?? '?'}</small>` : '';
+    body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}${hashInfo}</p>`;
+    document.getElementById('osSearchModal').showModal();
+    return;
+  }
+  body.innerHTML = results.map(res => `
+    <div style="border-bottom:1px solid var(--border);padding:0.6rem 0;display:flex;align-items:flex-start;gap:0.75rem">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:600;word-break:break-all">${esc(res.filename)}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">
+          ${res.uploader ? `👤 ${esc(res.uploader)}` : ''} ↓ ${res.downloads} · ★ ${res.rating}
+          ${res.hash_match ? '· <span style="color:var(--success)">hash ✓</span>' : ''}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-xs"
+              onclick="mxOsStandaloneConfirm(${res.file_id},'${esc(res.filename)}','${lang}',${fileIdx},this)">
+        ${t('js_use_this')}
+      </button>
+    </div>`).join('');
+  document.getElementById('osSearchModal').showModal();
+}
+
+async function mxOsStandaloneConfirm(file_id, filename, lang, fileIdx, btn) {
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const r = await fetch('/api/subtitles/download', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_id, filename }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    const isoLang = { it:'ita', en:'eng', fr:'fra', de:'deu', es:'spa', pt:'por' }[lang] || lang;
+    MX.tracks.push({
+      type: 'subtitle', source_file_idx: fileIdx, ffprobe_index: -99,
+      codec: 'SRT', mkv_codec: 'S_TEXT/UTF8',
+      language: isoLang, title: 'SRT (OS)',
+      forced: false, default: false, include: true, delay_ms: 0,
+      action: 'ocr', converted_path: data.path,
+    });
+    mxRenderTrackTable();
+    const statusEl = document.getElementById('mxOsStandaloneStatus');
+    if (statusEl) { statusEl.textContent = t('js_srt_ready'); statusEl.style.color = 'var(--success)'; }
+    document.getElementById('osSearchModal').close();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = t('js_use_this');
+    alert(t('js_download_failed') + e.message);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -4188,18 +4856,19 @@ async function _osDoSearch(ffprobe_index, source) {
     if (!r.ok) throw new Error(data.detail || t('js_error'));
 
     if (statusEl) statusEl.textContent = '';
-    osShowResults(data.results || [], ffprobe_index, source);
+    osShowResults(data.results || [], ffprobe_index, source, data.hash, data.api_total);
   } catch (e) {
     if (statusEl) statusEl.textContent = '✗ ' + e.message;
     alert(t('js_search_failed') + e.message);
   }
 }
 
-function osShowResults(results, ffprobe_index, source) {
+function osShowResults(results, ffprobe_index, source, hash, apiTotal) {
   const body = document.getElementById('osSearchBody');
 
   if (results.length === 0) {
-    body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}</p>`;
+    const hashInfo = hash ? `<br><small style="font-family:monospace;opacity:.7">hash: ${hash} · api_total: ${apiTotal ?? '?'}</small>` : '';
+    body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}${hashInfo}</p>`;
     document.getElementById('osSearchModal').showModal();
     return;
   }
@@ -4248,6 +4917,7 @@ async function osConfirmDownload(file_id, filename, ffprobe_index, source, btn) 
       tr.converted_path = data.path;
       tr.include = true;
     }
+    renderTrackTable();
 
     const statusEl = document.getElementById(`dlStatus_${ffprobe_index}_${source}`);
     if (statusEl) {
