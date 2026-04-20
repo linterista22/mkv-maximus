@@ -373,6 +373,19 @@ const STRINGS = {
     meta_edit_subtitle: 'Modifica metadati MKV in-place',
     meta_mux_subtitle: 'Assembla tracce da N file MKV',
     meta_settings_subtitle: 'OpenSubtitles e preferenze',
+    // OS step
+    step_os: 'OS',
+    mux_step_os: 'OS',
+    os_step_title: '🌐 Scarica sottotitoli da OpenSubtitles',
+    os_step_lang_label: 'Lingua:',
+    os_step_file_label: 'Da file:',
+    os_step_search_btn: 'Cerca',
+    os_step_skip: 'Avanti senza scaricare →',
+    os_step_season_warn: 'In modalità stagione i sottotitoli OS si aggiungono per singolo episodio dopo il batch.',
+    os_added_counter: 'sottotitolo/i aggiunto/i',
+    js_add: 'Aggiungi',
+    js_added: '✓ Aggiunto',
+    os_modal_close: 'Chiudi',
   },
 
   eng: {
@@ -745,6 +758,19 @@ const STRINGS = {
     meta_edit_subtitle: 'Edit MKV metadata in-place',
     meta_mux_subtitle: 'Assemble tracks from N MKV files',
     meta_settings_subtitle: 'OpenSubtitles and settings',
+    // OS step
+    step_os: 'OS',
+    mux_step_os: 'OS',
+    os_step_title: '🌐 Download subtitles from OpenSubtitles',
+    os_step_lang_label: 'Language:',
+    os_step_file_label: 'From file:',
+    os_step_search_btn: 'Search',
+    os_step_skip: 'Skip and continue →',
+    os_step_season_warn: 'In season mode, OS subtitles must be added per episode after the batch.',
+    os_added_counter: 'subtitle(s) added',
+    js_add: 'Add',
+    js_added: '✓ Added',
+    os_modal_close: 'Close',
   },
 };
 
