@@ -901,14 +901,20 @@ function _showStep(n) {
 function goToStep(n) {
   const isSeason = S.mode === 'season';
 
-  if (n === 5 && !isSeason) {
+  // Step 5: OS step — show/hide season warning vs search controls
+  if (n === 5) {
+    document.getElementById('osSeasonWarn').style.display = isSeason ? 'block' : 'none';
+    document.getElementById('osStepControls').style.display = isSeason ? 'none' : 'flex';
+  }
+
+  if (n === 6 && !isSeason) {
     S.outputDir  = document.getElementById('outputDir').value;
     S.outputName = document.getElementById('outputName').value;
     renderTrackTable();
   }
 
-  // Show/hide season vs single content at step 5
-  if (n === 5) {
+  // Show/hide season vs single content at step 6
+  if (n === 6) {
     document.getElementById('seasonSummaryPanel').classList.toggle('hidden', !isSeason);
     document.getElementById('singleTrackPanel').classList.toggle('hidden', isSeason);
     if (isSeason) renderBatchOffsetSummary();
@@ -2105,7 +2111,7 @@ async function doStartMux() {
     if (!r.ok) throw new Error(data.detail || t('js_error'));
 
     S.jobId = data.job_id;
-    goToStep(6);
+    goToStep(7);
     startSSE();
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -2402,7 +2408,7 @@ async function doStartBatchFromSummary() {
     document.getElementById('batchEpisodeList').classList.remove('hidden');
     document.getElementById('batchEpisodeItems').innerHTML = '';
     document.getElementById('batchCounter').textContent = `0 / ${data.total}`;
-    goToStep(6);
+    goToStep(7);
     startSSE();
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -2451,7 +2457,7 @@ async function doStartBatch() {
     document.getElementById('batchEpisodeList').classList.remove('hidden');
     document.getElementById('batchEpisodeItems').innerHTML = '';
     document.getElementById('batchCounter').textContent = `0 / ${data.total}`;
-    goToStep(6);
+    goToStep(7);
     startSSE();
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -4602,25 +4608,17 @@ function _osIncrementCounter() {
 
 /* ── OS1: Pannello standalone OpenSubtitles (Sync + Mux) ────────────────── */
 
-function toggleOsStandalonePanel() {
-  const body = document.getElementById('osStandaloneBody');
-  const tog  = document.getElementById('osStandaloneToggle');
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  tog.textContent = open ? '▾' : '▴';
-}
-
-async function osStandaloneSearch() {
+async function osStepSearch() {
   let cfg;
   try { const r = await fetch('/api/config'); cfg = (await r.json()).opensubtitles || {}; }
   catch { cfg = {}; }
   if (!cfg.username || !cfg.api_key || !cfg.has_password) {
-    _osPendingSearch = () => osStandaloneSearch();
+    _osPendingSearch = () => osStepSearch();
     document.getElementById('osCredsModal').showModal();
     return;
   }
-  const lang     = document.getElementById('osStandaloneLang').value;
-  const statusEl = document.getElementById('osStandaloneStatus');
+  const lang     = document.getElementById('osStepLang').value;
+  const statusEl = document.getElementById('osStepStatus');
   const mkv_path = S.videoFile;
   if (!mkv_path) { alert(t('js_error')); return; }
   if (statusEl) statusEl.textContent = t('js_searching');
