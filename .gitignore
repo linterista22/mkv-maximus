@@ -6,8 +6,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Data (history locale, non condiviso)
-data/history.json
+# Data (history, config, credenziali — mai nel repo)
+data/
 
 # Temp files
 *.wav
@@ -24,6 +24,7 @@ data/history.json
 # Private dev files (not for public repo)
 CLAUDE.md
 TODOLIST.md
+docs/
 
 # Python packaging
 *.pyd
