@@ -3952,7 +3952,7 @@ async function mxAnalyzeAll() {
 
     mxRenderTrackTable();
     mxRenderActionsPanel(MX.suggestedActions);
-    mxOsStandaloneUpdateFileSel();
+    mxOsStepUpdateFileSel();
     mxGoStep(MX.suggestedActions.length > 0 ? 2 : 3);
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -4147,7 +4147,7 @@ async function mxStartMux() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || t('js_error'));
 
-    mxGoStep(4);
+    mxGoStep(5);
     mxConnectSSE();
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -4692,20 +4692,6 @@ async function osStandaloneConfirm(file_id, filename, lang, btn) {
   }
 }
 
-function toggleMxOsStandalonePanel() {
-  const body = document.getElementById('mxOsStandaloneBody');
-  const tog  = document.getElementById('mxOsStandaloneToggle');
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  tog.textContent = open ? '▾' : '▴';
-}
-
-function mxOsStandaloneUpdateFileSel() {
-  const sel = document.getElementById('mxOsStandaloneFileSel');
-  if (!sel) return;
-  sel.innerHTML = MX.files.map((f, i) => `<option value="${i}">F${i+1}: ${esc(f.name)}</option>`).join('');
-}
-
 async function mxOsStandaloneSearch() {
   let cfg;
   try { const r = await fetch('/api/config'); cfg = (await r.json()).opensubtitles || {}; }
@@ -4785,6 +4771,43 @@ async function mxOsStandaloneConfirm(file_id, filename, lang, fileIdx, btn) {
   } catch (e) {
     btn.disabled = false; btn.textContent = t('js_add');
     alert(t('js_download_failed') + e.message);
+  }
+}
+
+/* ── Step 3 OS Mux: ricerca ─────────────────────────────────────────────── */
+
+function mxOsStepUpdateFileSel() {
+  const sel = document.getElementById('mxOsFileSel');
+  if (!sel) return;
+  sel.innerHTML = MX.files.map((f, i) => `<option value="${i}">F${i+1}: ${esc(f.name)}</option>`).join('');
+}
+
+async function mxOsStepSearch() {
+  let cfg;
+  try { const r = await fetch('/api/config'); cfg = (await r.json()).opensubtitles || {}; }
+  catch { cfg = {}; }
+  if (!cfg.username) {
+    _osPendingSearch = () => mxOsStepSearch();
+    document.getElementById('osCredsModal').showModal();
+    return;
+  }
+  const lang    = document.getElementById('mxOsLang').value;
+  const fileIdx = parseInt(document.getElementById('mxOsFileSel')?.value) || 0;
+  const statusEl = document.getElementById('mxOsStepStatus');
+  const mkv_path = MX.files[fileIdx]?.path;
+  if (!mkv_path) { alert(t('js_error')); return; }
+  if (statusEl) statusEl.textContent = t('js_searching');
+  try {
+    const r = await fetch('/api/subtitles/search', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: mkv_path, language: lang }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (statusEl) statusEl.textContent = '';
+    mxOsStandaloneShowResults(data.results || [], data.hash, data.api_total, lang, fileIdx);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '✗ ' + e.message;
   }
 }
 
