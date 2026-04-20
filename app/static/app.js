@@ -4549,7 +4549,7 @@ function mxOsShowResults(results, ffprobe_index, file_idx, hash, apiTotal) {
       </div>
       <button class="btn btn-primary btn-xs"
               onclick="mxOsConfirmDownload(${res.file_id},'${esc(res.filename)}',${ffprobe_index},${file_idx},this)">
-        ${t('js_use_this')}
+        ${t('js_add')}
       </button>
     </div>`).join('');
   document.getElementById('osSearchModal').showModal();
@@ -4576,6 +4576,26 @@ async function mxOsConfirmDownload(file_id, filename, ffprobe_index, file_idx, b
   } catch (e) {
     btn.disabled = false; btn.textContent = t('js_use_this');
     alert(t('js_download_failed') + e.message);
+  }
+}
+
+/* ── OS modal helpers ────────────────────────────────────────────────────── */
+
+let _osAddedCount = 0;
+
+function _osOpenModal() {
+  _osAddedCount = 0;
+  const ctr = document.getElementById('osAddedCounter');
+  if (ctr) { ctr.style.display = 'none'; ctr.textContent = ''; }
+  document.getElementById('osSearchModal').showModal();
+}
+
+function _osIncrementCounter() {
+  _osAddedCount++;
+  const ctr = document.getElementById('osAddedCounter');
+  if (ctr) {
+    ctr.textContent = `${_osAddedCount} ${t('os_added_counter')}`;
+    ctr.style.display = 'block';
   }
 }
 
@@ -4622,7 +4642,7 @@ function osStandaloneShowResults(results, hash, apiTotal, lang) {
   if (results.length === 0) {
     const hashInfo = hash ? `<br><small style="font-family:monospace;opacity:.7">hash: ${hash} · api_total: ${apiTotal ?? '?'}</small>` : '';
     body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}${hashInfo}</p>`;
-    document.getElementById('osSearchModal').showModal();
+    _osOpenModal();
     return;
   }
   body.innerHTML = results.map(res => `
@@ -4635,12 +4655,12 @@ function osStandaloneShowResults(results, hash, apiTotal, lang) {
           ${res.hash_match ? '&nbsp;·&nbsp; <span style="color:var(--success)">hash ✓</span>' : ''}
         </div>
       </div>
-      <button class="btn btn-primary btn-sm"
+      <button class="btn btn-primary btn-sm" id="osbtn_${res.file_id}"
               onclick="osStandaloneConfirm(${res.file_id},'${esc(res.filename)}','${lang}',this)">
-        ${t('js_use_this')}
+        ${t('js_add')}
       </button>
     </div>`).join('');
-  document.getElementById('osSearchModal').showModal();
+  _osOpenModal();
 }
 
 async function osStandaloneConfirm(file_id, filename, lang, btn) {
@@ -4653,19 +4673,20 @@ async function osStandaloneConfirm(file_id, filename, lang, btn) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || t('js_error'));
     const isoLang = { it:'ita', en:'eng', fr:'fra', de:'deu', es:'spa', pt:'por' }[lang] || lang;
+    const uid = -(Date.now() % 1000000);
     S.trackTable.push({
-      type: 'subtitle', source: 'source', ffprobe_index: -99,
+      type: 'subtitle', source: 'source', ffprobe_index: uid,
       codec: 'SRT', mkv_codec: 'S_TEXT/UTF8',
       language: isoLang, title: 'SRT (OS)',
       forced: false, default: false, include: true, delay_ms: 0,
       action: 'ocr', converted_path: data.path,
     });
     renderTrackTable();
-    const statusEl = document.getElementById('osStandaloneStatus');
-    if (statusEl) { statusEl.textContent = t('js_srt_ready'); statusEl.style.color = 'var(--success)'; }
-    document.getElementById('osSearchModal').close();
+    _osIncrementCounter();
+    btn.textContent = t('js_added');
+    btn.disabled = false;
   } catch (e) {
-    btn.disabled = false; btn.textContent = t('js_use_this');
+    btn.disabled = false; btn.textContent = t('js_add');
     alert(t('js_download_failed') + e.message);
   }
 }
@@ -4718,7 +4739,7 @@ function mxOsStandaloneShowResults(results, hash, apiTotal, lang, fileIdx) {
   if (results.length === 0) {
     const hashInfo = hash ? `<br><small style="font-family:monospace;opacity:.7">hash: ${hash} · api_total: ${apiTotal ?? '?'}</small>` : '';
     body.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1rem">${t('js_os_no_results')}${hashInfo}</p>`;
-    document.getElementById('osSearchModal').showModal();
+    _osOpenModal();
     return;
   }
   body.innerHTML = results.map(res => `
@@ -4730,12 +4751,12 @@ function mxOsStandaloneShowResults(results, hash, apiTotal, lang, fileIdx) {
           ${res.hash_match ? '· <span style="color:var(--success)">hash ✓</span>' : ''}
         </div>
       </div>
-      <button class="btn btn-primary btn-xs"
+      <button class="btn btn-primary btn-xs" id="mxosbtn_${res.file_id}"
               onclick="mxOsStandaloneConfirm(${res.file_id},'${esc(res.filename)}','${lang}',${fileIdx},this)">
-        ${t('js_use_this')}
+        ${t('js_add')}
       </button>
     </div>`).join('');
-  document.getElementById('osSearchModal').showModal();
+  _osOpenModal();
 }
 
 async function mxOsStandaloneConfirm(file_id, filename, lang, fileIdx, btn) {
@@ -4748,19 +4769,20 @@ async function mxOsStandaloneConfirm(file_id, filename, lang, fileIdx, btn) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || t('js_error'));
     const isoLang = { it:'ita', en:'eng', fr:'fra', de:'deu', es:'spa', pt:'por' }[lang] || lang;
+    const uid = -(Date.now() % 1000000);
     MX.tracks.push({
-      type: 'subtitle', source_file_idx: fileIdx, ffprobe_index: -99,
+      type: 'subtitle', source_file_idx: fileIdx, ffprobe_index: uid, mkvmerge_id: -1,
       codec: 'SRT', mkv_codec: 'S_TEXT/UTF8',
       language: isoLang, title: 'SRT (OS)',
       forced: false, default: false, include: true, delay_ms: 0,
       action: 'ocr', converted_path: data.path,
     });
     mxRenderTrackTable();
-    const statusEl = document.getElementById('mxOsStandaloneStatus');
-    if (statusEl) { statusEl.textContent = t('js_srt_ready'); statusEl.style.color = 'var(--success)'; }
-    document.getElementById('osSearchModal').close();
+    _osIncrementCounter();
+    btn.textContent = t('js_added');
+    btn.disabled = false;
   } catch (e) {
-    btn.disabled = false; btn.textContent = t('js_use_this');
+    btn.disabled = false; btn.textContent = t('js_add');
     alert(t('js_download_failed') + e.message);
   }
 }

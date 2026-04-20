@@ -1044,7 +1044,14 @@
       <div class="info-modal-title" data-i18n="os_modal_title">🔍 Risultati OpenSubtitles</div>
       <button class="modal-close-btn" onclick="document.getElementById('osSearchModal').close()">✕</button>
     </div>
-    <div id="osSearchBody" style="padding:0.75rem 1rem;max-height:60vh;overflow-y:auto"></div>
+    <div id="osAddedCounter" style="display:none;padding:0.4rem 1rem;font-size:0.82rem;
+         color:var(--success);border-bottom:1px solid var(--border)"></div>
+    <div id="osSearchBody" style="padding:0.75rem 1rem;max-height:55vh;overflow-y:auto"></div>
+    <div style="padding:0.5rem 1rem;text-align:right;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost btn-sm"
+              onclick="document.getElementById('osSearchModal').close()"
+              data-i18n="os_modal_close">Chiudi</button>
+    </div>
   </div>
 </dialog>
 
