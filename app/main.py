@@ -313,7 +313,7 @@ class SignatureBatchStartRequest(BaseModel):
 
 class SimpleMuxTrack(BaseModel):
     source_file_idx: int
-    mkvmerge_id: int
+    mkvmerge_id: int = -1
     type: str
     codec: str = ""
     language: Optional[str] = None
@@ -323,6 +323,12 @@ class SimpleMuxTrack(BaseModel):
     include: bool = True
     delay_ms: int = 0
     action: str = "passthrough"
+    ffprobe_index: int = -1
+    converted_path: Optional[str] = None
+    ocr_lang: Optional[str] = None
+    codec_out: Optional[str] = None
+    bitrate_out: Optional[int] = None
+    downmix: Optional[str] = None
 
 
 class SimpleMuxRequest(BaseModel):
@@ -1359,17 +1365,38 @@ async def _run_mux_job_multi(
         _current_job.update({
             "id": job_id,
             "state": "running",
-            "phase": "muxing",
+            "phase": "converting",
             "percent": 0,
             "error": None,
             "output_path": None,
             "started_at": time.time(),
         })
-        _push_event({"event": "start", "job_id": job_id, "phase": "muxing"})
+        _push_event({"event": "start", "job_id": job_id, "phase": "converting"})
 
         tmp_files: list[str] = []
 
         try:
+            async def on_preprocess_log(line: str) -> None:
+                _push_event({"event": "progress", "phase": "converting", "percent": -1, "log": line})
+
+            # ── Phase 1a: VobSub OCR ───────────────────────────────────────────
+            ocr_files = await run_pre_mux_ocr(
+                track_table=track_table,
+                files=files,
+                job_id=job_id,
+                progress_callback=on_preprocess_log,
+            )
+            tmp_files += ocr_files
+
+            # ── Phase 1b: audio conversions ────────────────────────────────────
+            conv_files = await run_pre_mux_conversions(
+                track_table=track_table,
+                files=files,
+                job_id=job_id,
+                progress_callback=on_preprocess_log,
+            )
+            tmp_files += conv_files
+
             chapters_path: Optional[str] = None
             no_chapters = False
 
@@ -1418,6 +1445,9 @@ async def _run_mux_job_multi(
                 except Exception as e:
                     _push_event({"event": "progress", "phase": "muxing", "percent": -1,
                                  "log": f"Avviso snap capitoli: {e}"})
+
+            _current_job["phase"] = "muxing"
+            _push_event({"event": "phase", "phase": "muxing"})
 
             cmd = build_mkvmerge_cmd_multi(
                 files, track_table, output_path,
@@ -1581,28 +1611,31 @@ async def subtitles_search(req: SubtitleSearchRequest):
     if not os_cfg.get("username"):
         raise HTTPException(status_code=422, detail="Credenziali OpenSubtitles non configurate")
 
+    fallback_query = Path(req.file).stem
     try:
         token = await _get_os_token(cfg)
-        results = await subtitle_downloader.search_by_hash(
+        results, movie_hash, total_count = await subtitle_downloader.search_by_hash(
             mkv_path=req.file,
             language=req.language,
             api_key=os_cfg["api_key"],
             token=token,
+            fallback_query=fallback_query,
         )
-        return {"results": results, "count": len(results)}
+        return {"results": results, "count": len(results), "hash": movie_hash, "api_total": total_count}
     except RuntimeError as e:
         # Token might be stale — invalidate and retry once
         if "401" in str(e):
             _os_session.update({"token": None, "expires_at": 0.0})
             try:
                 token = await _get_os_token(cfg)
-                results = await subtitle_downloader.search_by_hash(
+                results, movie_hash, total_count = await subtitle_downloader.search_by_hash(
                     mkv_path=req.file,
                     language=req.language,
                     api_key=os_cfg["api_key"],
                     token=token,
+                    fallback_query=fallback_query,
                 )
-                return {"results": results, "count": len(results)}
+                return {"results": results, "count": len(results), "hash": movie_hash, "api_total": total_count}
             except Exception as e2:
                 raise HTTPException(status_code=422, detail=str(e2))
         raise HTTPException(status_code=422, detail=str(e))
@@ -2041,6 +2074,19 @@ async def probe_folder(req: ProbeFolderRequest):
             vid = next((s for s in streams if s.get("codec_type") == "video"), None)
             aud = next((s for s in streams if s.get("codec_type") == "audio"), None)
 
+            def _sinfo(s):
+                tags = s.get("tags", {})
+                return {
+                    "codec": (s.get("codec_name") or "?").upper(),
+                    "language": tags.get("language") or tags.get("LANGUAGE") or "",
+                    "title": tags.get("title") or tags.get("TITLE") or "",
+                    "channels": s.get("channels", 0),
+                    "forced": s.get("disposition", {}).get("forced", 0) == 1,
+                }
+
+            audios = [s for s in streams if s.get("codec_type") == "audio"]
+            subs   = [s for s in streams if s.get("codec_type") == "subtitle"]
+
             results.append({
                 "name": f["name"],
                 "path": fpath,
@@ -2049,6 +2095,8 @@ async def probe_folder(req: ProbeFolderRequest):
                 "video_codec": vid.get("codec_name", "?").upper() if vid else "—",
                 "resolution": f"{vid.get('width','?')}x{vid.get('height','?')}" if vid else "—",
                 "audio_codec": (aud.get("codec_name", "?") or "?").upper() if aud else "—",
+                "audio_tracks": [_sinfo(s) for s in audios],
+                "sub_tracks":   [_sinfo(s) for s in subs],
             })
         except Exception:
             results.append({

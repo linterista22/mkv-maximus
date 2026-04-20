@@ -300,10 +300,11 @@ class TestDetectVobsubTracks(unittest.TestCase):
         result = detect_vobsub_tracks([t])
         self.assertEqual(result[0]["suggested_sub_action"]["action"], "remux")
 
-    def test_pgs_detected(self):
+    def test_pgs_not_vobsub(self):
+        # PGS uses .sup format — mkvextract creates .sup not .idx/.sub, so not treated as VobSub
         t = self._sub("hdmv_pgs_subtitle", "S_HDMV/PGS")
         result = detect_vobsub_tracks([t])
-        self.assertTrue(result[0]["vobsub"])
+        self.assertFalse(result[0]["vobsub"])
 
     def test_srt_not_vobsub(self):
         t = self._sub("subrip", "S_TEXT/UTF8")
@@ -563,6 +564,30 @@ class TestValidateSrt(unittest.TestCase):
             path = f.name
         self.assertTrue(validate_srt(path))
         Path(path).unlink(missing_ok=True)
+
+
+class TestSimpleMuxTrack(unittest.TestCase):
+
+    def test_mkvmerge_id_has_default(self):
+        """SimpleMuxTrack deve poter essere creata senza mkvmerge_id (tracce OS standalone)."""
+        from main import SimpleMuxTrack
+        track = SimpleMuxTrack(
+            source_file_idx=0,
+            type="subtitle",
+            codec="SRT",
+        )
+        self.assertEqual(track.mkvmerge_id, -1)
+
+    def test_mkvmerge_id_explicit_value(self):
+        """mkvmerge_id esplicito deve essere preservato."""
+        from main import SimpleMuxTrack
+        track = SimpleMuxTrack(
+            source_file_idx=0,
+            mkvmerge_id=5,
+            type="subtitle",
+            codec="SRT",
+        )
+        self.assertEqual(track.mkvmerge_id, 5)
 
 
 if __name__ == "__main__":
