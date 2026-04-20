@@ -568,10 +568,17 @@ class TestValidateSrt(unittest.TestCase):
 
 class TestSimpleMuxTrack(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import importlib
+            cls._SimpleMuxTrack = importlib.import_module("main").SimpleMuxTrack
+        except ModuleNotFoundError:
+            raise unittest.SkipTest("fastapi not installed — run tests inside Docker")
+
     def test_mkvmerge_id_has_default(self):
         """SimpleMuxTrack deve poter essere creata senza mkvmerge_id (tracce OS standalone)."""
-        from main import SimpleMuxTrack
-        track = SimpleMuxTrack(
+        track = self._SimpleMuxTrack(
             source_file_idx=0,
             type="subtitle",
             codec="SRT",
@@ -580,8 +587,7 @@ class TestSimpleMuxTrack(unittest.TestCase):
 
     def test_mkvmerge_id_explicit_value(self):
         """mkvmerge_id esplicito deve essere preservato."""
-        from main import SimpleMuxTrack
-        track = SimpleMuxTrack(
+        track = self._SimpleMuxTrack(
             source_file_idx=0,
             mkvmerge_id=5,
             type="subtitle",
