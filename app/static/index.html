@@ -870,8 +870,9 @@
   <nav class="steps-nav" id="muxStepsNav">
     <div class="step-pill active" data-mux-step="1"><span class="step-num">1</span> <span data-i18n="mux_step_file">File</span></div>
     <div class="step-pill" data-mux-step="2"><span class="step-num">2</span> <span data-i18n="mux_step_actions">Azioni</span> <span style="font-size:0.7em;opacity:0.7">(opt.)</span></div>
-    <div class="step-pill" data-mux-step="3"><span class="step-num">3</span> <span data-i18n="mux_step_tracks">Tracce</span></div>
-    <div class="step-pill" data-mux-step="4"><span class="step-num">4</span> <span data-i18n="mux_step_mux">Mux</span></div>
+    <div class="step-pill" data-mux-step="3"><span class="step-num">3</span> <span data-i18n="mux_step_os">OS</span> <span style="font-size:0.7em;opacity:0.7">(opt.)</span></div>
+    <div class="step-pill" data-mux-step="4"><span class="step-num">4</span> <span data-i18n="mux_step_tracks">Tracce</span></div>
+    <div class="step-pill" data-mux-step="5"><span class="step-num">5</span> <span data-i18n="mux_step_mux">Mux</span></div>
   </nav>
 
   <!-- ── Step 1: File list ──────────────────────────────────────────────── -->
@@ -892,9 +893,37 @@
     <div id="muxActionsPanel"></div>
   </div>
 
-  <!-- ── Step 3: Track table + output + chapters ───────────────────────── -->
+  <!-- ── Step 3: OpenSubtitles download (opzionale) ────────────────────── -->
   <div id="muxStep3" class="step-section hidden">
-    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(1)" data-i18n="btn_back">← Indietro</button>
+    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(2)" data-i18n="btn_back">← Indietro</button>
+    <div class="card">
+      <div class="card-title"><span data-i18n="os_step_title">🌐 Scarica sottotitoli da OpenSubtitles</span></div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;padding:0.5rem 0">
+        <label style="font-size:0.8rem;color:var(--text-muted)" data-i18n="os_step_lang_label">Lingua:</label>
+        <select id="mxOsLang" style="font-size:0.82rem">
+          <option value="it">Italiano</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+        </select>
+        <label style="font-size:0.8rem;color:var(--text-muted)" data-i18n="os_step_file_label">Da file:</label>
+        <select id="mxOsFileSel" style="font-size:0.82rem;max-width:200px"></select>
+        <button class="btn btn-ghost btn-xs" id="btnMxOsSearch"
+                onclick="mxOsStepSearch()" data-i18n="os_step_search_btn">Cerca</button>
+        <span id="mxOsStepStatus" style="font-size:0.78rem;color:var(--text-muted)"></span>
+      </div>
+    </div>
+    <div class="step-nav-btns" style="margin-top:0.5rem">
+      <div></div>
+      <button class="btn btn-primary" onclick="mxGoStep(4)" data-i18n="os_step_skip">Avanti senza scaricare →</button>
+    </div>
+  </div>
+
+  <!-- ── Step 4: Track table + output + chapters ───────────────────────── -->
+  <div id="muxStep4" class="step-section hidden">
+    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(3)" data-i18n="btn_back">← Indietro</button>
 
     <div class="card">
       <div class="card-title">
@@ -920,32 +949,6 @@
           </thead>
           <tbody id="muxTrackBody"></tbody>
         </table>
-      </div>
-    </div>
-
-    <!-- OS1: pannello standalone OpenSubtitles (Mux) -->
-    <div class="card" id="mxOsStandalonePanel" style="margin-top:0.75rem">
-      <div class="card-title" onclick="toggleMxOsStandalonePanel()" style="cursor:pointer;user-select:none">
-        <span class="icon">📥</span>
-        <span data-i18n="os_standalone_title">Scarica sottotitolo da OpenSubtitles</span>
-        <span id="mxOsStandaloneToggle" style="margin-left:auto;font-size:0.9rem">▾</span>
-      </div>
-      <div id="mxOsStandaloneBody" style="padding:0.75rem 1rem;display:none">
-        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-          <label style="font-size:0.8rem;color:var(--text-muted)" data-i18n="os_dl_lang_label">Lingua:</label>
-          <select id="mxOsStandaloneLang" style="font-size:0.82rem">
-            <option value="it">Italiano</option>
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="es">Español</option>
-            <option value="pt">Português</option>
-          </select>
-          <label style="font-size:0.8rem;color:var(--text-muted)" data-i18n="os_standalone_from">Da file:</label>
-          <select id="mxOsStandaloneFileSel" style="font-size:0.82rem;max-width:200px"></select>
-          <button class="btn btn-ghost btn-xs" onclick="mxOsStandaloneSearch()" data-i18n="js_search_btn">Cerca</button>
-          <span id="mxOsStandaloneStatus" style="font-size:0.78rem;color:var(--text-muted)"></span>
-        </div>
       </div>
     </div>
 
@@ -1007,8 +1010,8 @@
             onclick="mxStartMux()" data-i18n="btn_mux_start">🚀 Avvia Mux</button>
   </div>
 
-  <!-- ── Step 4: Progress + result ─────────────────────────────────────── -->
-  <div id="muxStep4" class="step-section hidden">
+  <!-- ── Step 5: Progress + result ─────────────────────────────────────── -->
+  <div id="muxStep5" class="step-section hidden">
     <div class="card" id="muxProgressCard">
       <div class="card-title"><span class="icon">⚙️</span> <span data-i18n="mux_progress_card">Mux in corso</span></div>
       <div id="muxPhaseLabel"
@@ -1028,7 +1031,7 @@
       <div class="result-size" id="muxResultSize"></div>
       <ul class="track-summary-list" id="muxResultTrackList"></ul>
       <div class="flex gap-1 mt-2">
-        <button class="btn btn-ghost btn-sm" onclick="mxGoStep(2)" data-i18n="mux_back_tracks">← Torna alle tracce</button>
+        <button class="btn btn-ghost btn-sm" onclick="mxGoStep(4)" data-i18n="mux_back_tracks">← Torna alle tracce</button>
         <button class="btn btn-ghost btn-sm" onclick="mxReset()" data-i18n="mux_new">↺ Nuovo Mux</button>
       </div>
     </div>
