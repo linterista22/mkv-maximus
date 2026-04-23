@@ -5,7 +5,7 @@ import json
 from typing import Optional
 
 from analyzer import (
-    get_ffprobe_tracks, get_mkvmerge_track_ids, merge_track_info,
+    get_ffprobe_tracks, get_mkvmerge_info, merge_track_info,
     auto_select_tracks, detect_audio_conversions, detect_vobsub_tracks,
     get_chapter_count, get_attachments,
 )
@@ -13,8 +13,10 @@ from state import HISTORY_FILE
 
 
 async def _analyze_file(filepath: str) -> list[dict]:
-    ffprobe = await get_ffprobe_tracks(filepath)
-    mkvmerge = await get_mkvmerge_track_ids(filepath)
+    ffprobe, (mkvmerge, _, _) = await asyncio.gather(
+        get_ffprobe_tracks(filepath),
+        get_mkvmerge_info(filepath),
+    )
     merged = merge_track_info(ffprobe, mkvmerge)
     merged = detect_audio_conversions(merged)
     merged = detect_vobsub_tracks(merged)

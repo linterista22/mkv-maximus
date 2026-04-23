@@ -100,8 +100,11 @@ def _parse_bitrate(val) -> Optional[int]:
         return None
 
 
-async def get_mkvmerge_track_ids(filepath: str) -> dict[int, dict]:
-    """Run mkvmerge -J and return {track_id: track_info} (JSON output, v9+)."""
+async def get_mkvmerge_info(filepath: str) -> tuple[dict[int, dict], list[dict], int]:
+    """
+    Single mkvmerge -J call → (tracks_dict, attachments_list, chapter_count).
+    Sostituisce 3 chiamate separate: get_mkvmerge_track_ids + get_attachments + get_chapter_count.
+    """
     cmd = ["mkvmerge", "-J", filepath]
     proc = await asyncio.create_subprocess_exec(
         *cmd,
@@ -112,9 +115,13 @@ async def get_mkvmerge_track_ids(filepath: str) -> dict[int, dict]:
     if proc.returncode not in (0, 1):
         raise RuntimeError(f"mkvmerge -J failed: {stderr.decode()}")
 
-    data = json.loads(stdout.decode())
-    tracks = {}
+    try:
+        data = json.loads(stdout.decode())
+    except Exception as e:
+        raise RuntimeError(f"mkvmerge -J JSON parse failed: {e}")
 
+    # ── tracks ────────────────────────────────────────────────────────────────
+    tracks: dict[int, dict] = {}
     for t in data.get("tracks", []):
         tid = t["id"]
         props = t.get("properties", {})
@@ -149,23 +156,26 @@ async def get_mkvmerge_track_ids(filepath: str) -> dict[int, dict]:
             "tag_bps": props.get("tag_bps"),
         }
 
+    # ── attachments ───────────────────────────────────────────────────────────
+    attachments: list[dict] = data.get("attachments", [])
+
+    # ── chapter count ─────────────────────────────────────────────────────────
+    chapter_count: int = len(data.get("chapters", []))
+
+    return tracks, attachments, chapter_count
+
+
+async def get_mkvmerge_track_ids(filepath: str) -> dict[int, dict]:
+    """Run mkvmerge -J and return {track_id: track_info} (JSON output, v9+)."""
+    tracks, _, _ = await get_mkvmerge_info(filepath)
     return tracks
 
 
 async def get_attachments(filepath: str) -> list[dict]:
     """Run mkvmerge -J and return the list of attachments (id, file_name, content_type, size)."""
-    cmd = ["mkvmerge", "-J", filepath]
-    proc = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, _ = await proc.communicate()
-    if proc.returncode not in (0, 1):
-        return []
     try:
-        data = json.loads(stdout.decode())
-        return data.get("attachments", [])
+        _, attachments, _ = await get_mkvmerge_info(filepath)
+        return attachments
     except Exception:
         return []
 
@@ -208,18 +218,9 @@ async def get_chapters(filepath: str) -> list[dict]:
 
 async def get_chapter_count(filepath: str) -> int:
     """Run mkvmerge -J and return the number of chapters in the file."""
-    cmd = ["mkvmerge", "-J", filepath]
-    proc = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, _ = await proc.communicate()
-    if proc.returncode not in (0, 1):
-        return 0
     try:
-        data = json.loads(stdout.decode())
-        return len(data.get("chapters", []))
+        _, _, count = await get_mkvmerge_info(filepath)
+        return count
     except Exception:
         return 0
 
