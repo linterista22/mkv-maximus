@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from analyzer import (
-    auto_select_tracks, get_chapter_count, get_attachments, get_mkvmerge_track_ids,
+    auto_select_tracks, get_mkvmerge_track_ids,
 )
 from converter import run_pre_mux_conversions
 from filebrowser import _validate_path, get_duration_sec
@@ -19,7 +19,7 @@ from helpers import (
     _analyze_pair, _build_suggested_actions, _get_video_title,
     _load_history, _save_history, _track_summary,
 )
-from matcher import match_episodes, extract_episode_number
+from matcher import match_episodes
 from models import (
     AnalyzeRequest, BatchMuxRequest, BatchOffsetStartRequest,
     MuxRequest, MatchRequest, OffsetRequest, OffsetSignatureRequest,
