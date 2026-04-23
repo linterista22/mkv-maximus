@@ -533,7 +533,6 @@ def detect_vobsub_tracks(tracks: list[dict]) -> list[dict]:
                 or "dvdsub" in codec
                 or "S_VOBSUB" in mkv_codec
                 or "DVD_BITMAP" in mkv_codec
-                or "S_HDMV" in mkv_codec  # PGS (Blu-ray bitmap subs)
             )
             if is_vobsub:
                 lang = t.get("language", "")
