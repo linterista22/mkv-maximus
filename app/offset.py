@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 linterista22
 import asyncio
-import os
 import re
 import uuid
+from pathlib import Path
 from typing import Optional, Callable, Awaitable
 
 from filebrowser import get_duration_sec
@@ -109,10 +109,7 @@ async def calculate_offset(
         return result
     finally:
         for f in (ref_wav, src_wav):
-            try:
-                os.unlink(f)
-            except FileNotFoundError:
-                pass
+            Path(f).unlink(missing_ok=True)
 
 
 async def auto_end_start(filepath: str) -> float:
@@ -235,10 +232,7 @@ async def find_signature_offset(
             except Exception:
                 pass
             finally:
-                try:
-                    os.unlink(win_wav)
-                except FileNotFoundError:
-                    pass
+                Path(win_wav).unlink(missing_ok=True)
 
             window_count += 1
             pos += step
@@ -255,10 +249,7 @@ async def find_signature_offset(
             except Exception:
                 pass
             finally:
-                try:
-                    os.unlink(win_wav)
-                except FileNotFoundError:
-                    pass
+                Path(win_wav).unlink(missing_ok=True)
 
         if best_result is None:
             raise RuntimeError("Impossibile trovare la sigla nel file target")
@@ -305,7 +296,4 @@ async def find_signature_offset(
         }
 
     finally:
-        try:
-            os.unlink(sig_wav)
-        except FileNotFoundError:
-            pass
+        Path(sig_wav).unlink(missing_ok=True)
