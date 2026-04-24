@@ -568,7 +568,9 @@ def build_mkvmerge_cmd_multi(
     for file_idx, file_path in enumerate(files):
         file_tracks = [
             t for t in track_table
-            if t.get("source_file_idx") == file_idx and t.get("include", True)
+            if t.get("source_file_idx") == file_idx
+            and t.get("include", True)
+            and not t.get("converted_path")  # standalone files handled separately
         ]
         if not file_tracks:
             continue
@@ -612,5 +614,20 @@ def build_mkvmerge_cmd_multi(
             _append_track_flags(cmd, str(t["mkvmerge_id"]), t)
 
         cmd.append(file_path)
+
+    # ── Standalone converted/downloaded files (.flac/.ac3/.srt) ──────────────
+    standalone = [
+        t for t in track_table
+        if t.get("include") and t.get("converted_path")
+        and t.get("action") in ("convert", "ocr")
+    ]
+    for t in standalone:
+        cmd += ["--no-video"]
+        if t["type"] == "subtitle":
+            cmd += ["--no-audio"]
+        else:
+            cmd += ["--no-subtitles"]
+        _append_track_flags(cmd, "0", t)
+        cmd.append(t["converted_path"])
 
     return cmd

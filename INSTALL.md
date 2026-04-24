@@ -20,17 +20,33 @@ git clone https://github.com/linterista22/mkv-maximus.git
 cd mkv-maximus
 ```
 
-**2. Edit `docker-compose.yml` — set your storage path**
+**2. Set your storage path in `.env`**
 
-Open `docker-compose.yml` and replace `/media/youruser/HDD` with the path you want to browse from within the app:
+Create a `.env` file in the project root with your media path:
+
+```bash
+echo "MEDIA_PATH=/media/youruser/HDD" > .env
+```
+
+Or create it manually:
+
+```
+MEDIA_PATH=/media/youruser/HDD
+```
+
+This file is listed in `.gitignore` — it is never overwritten by `git pull`. You set it once and forget it.
+
+**Multiple drives:** add extra volume lines directly in `docker-compose.yml` under `volumes:`:
 
 ```yaml
 volumes:
-  - /media/youruser/HDD:/storage:rw   # ← change the left side
+  - ${MEDIA_PATH:-/path/to/your/media}:/storage:rw
+  - /media/youruser/HDD2:/storage/HDD2:rw
+  - /mnt/NAS:/storage/NAS:rw
   - /DATA/AppData/mkv-maximus/data:/app/data
 ```
 
-The right side (`:storage`) must stay as-is — it is the path the app uses internally.
+The file browser will show all drives under `/storage` as subfolders.
 
 **3. Create the data directory**
 
@@ -62,6 +78,8 @@ http://<your-server-ip>:7788
 git pull
 sudo bash deploy.sh
 ```
+
+Your `.env` (storage path) and `/DATA/AppData/mkv-maximus/data/` (config and history) are never touched by updates.
 
 ### Stopping
 
@@ -182,7 +200,9 @@ The app listens on port **7788**. Make sure this port is reachable from the brow
 
 ## OpenSubtitles credentials (optional)
 
-The Sync sub-app can download SRT subtitles from [opensubtitles.com](https://www.opensubtitles.com). To enable this:
+> **Beta feature:** OpenSubtitles integration is in beta and may not work correctly in all cases.
+
+The Sync and Mux sub-apps can download SRT subtitles from [opensubtitles.com](https://www.opensubtitles.com). To enable this:
 
 1. Create a free account on opensubtitles.com
 2. Go to your profile → **API consumers** → create an API key

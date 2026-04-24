@@ -23,7 +23,7 @@
     <h1 id="headerTitle">MKV Maximus</h1>
     <span class="header-subtitle" id="headerSubtitle">The ultimate MKV toolkit</span>
   </div>
-  <span class="version">beta 0.5 &middot; by <a href="https://github.com/linterista22" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">linterista22</a></span>
+  <span class="version">1.0 &middot; by <a href="https://github.com/linterista22" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">linterista22</a></span>
   <div class="header-actions">
     <button class="hdr-btn hdr-btn-muted" id="btnLangSwitch" onclick="toggleLang()" style="font-size:0.78rem;letter-spacing:0.02em">🌐 EN</button>
     <button class="hdr-btn" onclick="openInfoModal()" data-i18n-title="btn_info_title" title="Informazioni">ℹ</button>
@@ -39,14 +39,14 @@
       <img src="/icon.png" class="info-modal-icon" alt="">
       <div>
         <div class="info-modal-title">MKV Maximus</div>
-        <div class="info-modal-sub">beta 0.5</div>
+        <div class="info-modal-sub">1.0</div>
       </div>
       <button class="modal-close-btn" onclick="document.getElementById('infoModal').close()">✕</button>
     </div>
     <div class="info-modal-body">
       <div class="info-row"><span class="info-label" data-i18n="info_author">Autore</span><span><a href="https://github.com/linterista22" target="_blank" rel="noopener">linterista22</a></span></div>
       <div class="info-row"><span class="info-label">GitHub</span><span><a href="https://github.com/linterista22/mkv-maximus" target="_blank" rel="noopener">linterista22/mkv-maximus</a></span></div>
-      <div class="info-row"><span class="info-label" data-i18n="info_version">Versione</span><span>beta 0.5</span></div>
+      <div class="info-row"><span class="info-label" data-i18n="info_version">Versione</span><span>1.0</span></div>
       <div class="info-row"><span class="info-label" data-i18n="info_license">Licenza</span><span class="info-placeholder" data-i18n="info_license_val">GPL 3 — in arrivo —</span></div>
     </div>
   </div>
@@ -166,7 +166,7 @@
         <div class="card">
           <div class="card-title"><span class="icon">🎥</span> <span data-i18n="video_file_card">File VIDEO</span></div>
           <div class="field-group">
-            <div class="file-picker" id="videoPicker" onclick="openBrowser('video')">
+            <div class="file-picker" id="videoPicker" onclick="openBrowser('video', {filter:'media'})">
               <span class="file-picker-icon">🗂️</span>
               <div class="file-picker-text">
                 <div class="file-picker-label" data-i18n="video_file_label">File di cui tenere il video</div>
@@ -178,7 +178,7 @@
         <div class="card">
           <div class="card-title"><span class="icon">🔊</span> <span data-i18n="source_file_card">File AUDIO/SUB</span></div>
           <div class="field-group">
-            <div class="file-picker" id="sourcePicker" onclick="openBrowser('source')">
+            <div class="file-picker" id="sourcePicker" onclick="openBrowser('source', {filter:'media'})">
               <span class="file-picker-icon">🗂️</span>
               <div class="file-picker-text">
                 <div class="file-picker-label" data-i18n="source_file_label">File da cui prendere audio e subs</div>
@@ -875,10 +875,11 @@
 
   <nav class="steps-nav" id="muxStepsNav">
     <div class="step-pill active" data-mux-step="1"><span class="step-num">1</span> <span data-i18n="mux_step_file">File</span></div>
-    <div class="step-pill" data-mux-step="2"><span class="step-num">2</span> <span data-i18n="mux_step_actions">Azioni</span> <span style="font-size:0.7em;opacity:0.7">(opt.)</span></div>
-    <div class="step-pill" data-mux-step="3"><span class="step-num">3</span> <span data-i18n="mux_step_os">OS</span> <span style="font-size:0.7em;opacity:0.7">(opt.)</span></div>
-    <div class="step-pill" data-mux-step="4"><span class="step-num">4</span> <span data-i18n="mux_step_tracks">Tracce</span></div>
-    <div class="step-pill" data-mux-step="5"><span class="step-num">5</span> <span data-i18n="mux_step_mux">Mux</span></div>
+    <div class="step-pill" data-mux-step="2"><span class="step-num">2</span> <span data-i18n="mux_step_analysis">Analisi</span></div>
+    <div class="step-pill" data-mux-step="3"><span class="step-num">3</span> <span data-i18n="mux_step_actions">Azioni</span> <span style="font-size:0.7em;opacity:0.7">(opt.)</span></div>
+    <div class="step-pill" data-mux-step="4"><span class="step-num">4</span> <span data-i18n="mux_step_os">OS</span> <span style="font-size:0.7em;opacity:0.7">(opt.)</span></div>
+    <div class="step-pill" data-mux-step="5"><span class="step-num">5</span> <span data-i18n="mux_step_tracks">Tracce</span></div>
+    <div class="step-pill" data-mux-step="6"><span class="step-num">6</span> <span data-i18n="mux_step_mux">Mux</span></div>
   </nav>
 
   <!-- ── Step 1: File list ──────────────────────────────────────────────── -->
@@ -887,21 +888,31 @@
       <div class="card-title"><span class="icon">🎬</span> <span data-i18n="mux_files_card">File MKV sorgenti</span></div>
       <div id="muxFileList" style="margin-bottom:0.5rem"></div>
       <button class="btn btn-ghost w-full" id="btnMuxAddFile"
-              onclick="openBrowser('muxAddFile')" data-i18n="btn_mux_add">+ Aggiungi file MKV</button>
+              onclick="openBrowser('muxAddFile', {filter:'media'})" data-i18n="btn_mux_add">+ Aggiungi file</button>
     </div>
     <button class="btn btn-primary w-full" id="btnMuxAnalyze" disabled
             onclick="mxAnalyzeAll()" data-i18n="btn_mux_analyze">Analizza tracce →</button>
   </div>
 
-  <!-- ── Step 2: Azioni suggerite (opzionale) ────────────────────────── -->
+  <!-- ── Step 2: Analisi tracce ──────────────────────────────────────── -->
   <div id="muxStep2" class="step-section hidden">
     <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(1)" data-i18n="btn_back">← Indietro</button>
+    <div class="card">
+      <div class="card-title"><span class="icon">📋</span> <span data-i18n="mux_analysis_card">Riepilogo tracce trovate</span></div>
+      <div id="muxAnalysisSummary"></div>
+    </div>
+    <button class="btn btn-primary w-full" onclick="mxGoNextFromAnalysis()" data-i18n="btn_next">Avanti →</button>
+  </div>
+
+  <!-- ── Step 3: Azioni suggerite (opzionale) ────────────────────────── -->
+  <div id="muxStep3" class="step-section hidden">
+    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(2)" data-i18n="btn_back">← Indietro</button>
     <div id="muxActionsPanel"></div>
   </div>
 
-  <!-- ── Step 3: OpenSubtitles download (opzionale) ────────────────────── -->
-  <div id="muxStep3" class="step-section hidden">
-    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(2)" data-i18n="btn_back">← Indietro</button>
+  <!-- ── Step 4: OpenSubtitles download (opzionale) ────────────────────── -->
+  <div id="muxStep4" class="step-section hidden">
+    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(3)" data-i18n="btn_back">← Indietro</button>
     <div class="card">
       <div class="card-title"><span data-i18n="os_step_title">🌐 Scarica sottotitoli da OpenSubtitles</span></div>
       <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;padding:0.5rem 0">
@@ -923,13 +934,13 @@
     </div>
     <div class="step-nav-btns" style="margin-top:0.5rem">
       <div></div>
-      <button class="btn btn-primary" onclick="mxGoStep(4)" data-i18n="os_step_skip">Avanti senza scaricare →</button>
+      <button class="btn btn-primary" onclick="mxGoStep(5)" data-i18n="os_step_skip">Avanti senza scaricare →</button>
     </div>
   </div>
 
-  <!-- ── Step 4: Track table + output + chapters ───────────────────────── -->
-  <div id="muxStep4" class="step-section hidden">
-    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(3)" data-i18n="btn_back">← Indietro</button>
+  <!-- ── Step 5: Track table + output + chapters ───────────────────────── -->
+  <div id="muxStep5" class="step-section hidden">
+    <button class="btn btn-ghost btn-sm mb-1" onclick="mxGoStep(4)" data-i18n="btn_back">← Indietro</button>
 
     <div class="card">
       <div class="card-title">
@@ -1016,8 +1027,8 @@
             onclick="mxStartMux()" data-i18n="btn_mux_start">🚀 Avvia Mux</button>
   </div>
 
-  <!-- ── Step 5: Progress + result ─────────────────────────────────────── -->
-  <div id="muxStep5" class="step-section hidden">
+  <!-- ── Step 6: Progress + result ─────────────────────────────────────── -->
+  <div id="muxStep6" class="step-section hidden">
     <div class="card" id="muxProgressCard">
       <div class="card-title"><span class="icon">⚙️</span> <span data-i18n="mux_progress_card">Mux in corso</span></div>
       <div id="muxPhaseLabel"
@@ -1027,7 +1038,6 @@
       </div>
       <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.25rem"
            id="muxProgressPct">0%</div>
-      <div class="log-output mt-2" id="muxLogOutput"></div>
       <div id="muxErrorAlert" class="alert alert-danger mt-2 hidden"></div>
     </div>
 
@@ -1037,10 +1047,12 @@
       <div class="result-size" id="muxResultSize"></div>
       <ul class="track-summary-list" id="muxResultTrackList"></ul>
       <div class="flex gap-1 mt-2">
-        <button class="btn btn-ghost btn-sm" onclick="mxGoStep(4)" data-i18n="mux_back_tracks">← Torna alle tracce</button>
+        <button class="btn btn-ghost btn-sm" onclick="mxGoStep(5)" data-i18n="mux_back_tracks">← Torna alle tracce</button>
         <button class="btn btn-ghost btn-sm" onclick="mxReset()" data-i18n="mux_new">↺ Nuovo Mux</button>
       </div>
     </div>
+
+    <div class="log-output mt-2" id="muxLogOutput"></div>
   </div>
 
 </div>

@@ -9,7 +9,9 @@ services:
     ports:
       - "7788:7788"
     volumes:
-      - /path/to/your/media:/storage:rw      # ← change to your media folder
+      - ${MEDIA_PATH:-/path/to/your/media}:/storage:rw   # set MEDIA_PATH in .env
+      # Multiple drives: mount each as a subfolder, e.g.:
+      # - /media/youruser/HDD2:/storage/HDD2:rw
       - /DATA/AppData/mkv-maximus/data:/app/data
     restart: unless-stopped
     environment:

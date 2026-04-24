@@ -27,7 +27,8 @@ const STRINGS = {
     // Settings
     settings_save: '💾 Salva',
     settings_test: '🔗 Test connessione',
-    settings_os_desc_html: `Necessario per scaricare sottotitoli SRT da OpenSubtitles.
+    settings_os_desc_html: `<strong>⚠ Funzionalità beta</strong> — potrebbe non funzionare correttamente in tutti i casi.<br>
+      Necessario per scaricare sottotitoli SRT da OpenSubtitles.
       Crea un account gratuito su
       <a href="https://www.opensubtitles.com" target="_blank" rel="noopener">opensubtitles.com</a>
       e ottieni l'API key dalla pagina
@@ -65,6 +66,7 @@ const STRINGS = {
     btn_confirm_match: '✓ Conferma e analizza primo episodio →',
     // Step 2
     btn_back: '← Indietro',
+    btn_next: 'Avanti →',
     btn_go_offset: 'Configura offset →',
     // Step 3
     offset_tracks_card: 'Tracce di confronto',
@@ -202,11 +204,13 @@ const STRINGS = {
     js_edit_batch_no_analyze: 'Analizza prima le tracce.',
     // Mux sub-app
     mux_step_file: 'File',
+    mux_step_analysis: 'Analisi',
     mux_step_actions: 'Azioni',
     mux_step_tracks: 'Tracce',
     mux_step_mux: 'Mux',
-    mux_files_card: '🎬 File MKV sorgenti',
-    btn_mux_add: '+ Aggiungi file MKV',
+    mux_analysis_card: 'Riepilogo tracce trovate',
+    mux_files_card: '🎬 File sorgenti',
+    btn_mux_add: '+ Aggiungi file',
     btn_mux_analyze: 'Analizza tracce →',
     mux_tracks_card: '📋 Tracce',
     mux_th_num: '#',
@@ -335,7 +339,7 @@ const STRINGS = {
     js_srt_ready: '✓ SRT pronto',
     js_download_failed: 'Download fallito: ',
     js_use_this: 'Usa questo',
-    os_standalone_title: 'Scarica sottotitolo da OpenSubtitles',
+    os_standalone_title: 'Scarica sottotitolo da OpenSubtitles (beta)',
     os_dl_lang_label: 'Lingua:',
     os_standalone_from: 'Da file:',
     js_fill_all: '✗ Compila tutti i campi',
@@ -376,7 +380,7 @@ const STRINGS = {
     // OS step
     step_os: 'OS',
     mux_step_os: 'OS',
-    os_step_title: '🌐 Scarica sottotitoli da OpenSubtitles',
+    os_step_title: '🌐 Scarica sottotitoli da OpenSubtitles (beta)',
     os_step_lang_label: 'Lingua:',
     os_step_file_label: 'Da file:',
     os_step_search_btn: 'Cerca',
@@ -412,7 +416,8 @@ const STRINGS = {
     // Settings
     settings_save: '💾 Save',
     settings_test: '🔗 Test connection',
-    settings_os_desc_html: `Required to download SRT subtitles from OpenSubtitles.
+    settings_os_desc_html: `<strong>⚠ Beta feature</strong> — may not work correctly in all cases.<br>
+      Required to download SRT subtitles from OpenSubtitles.
       Create a free account at
       <a href="https://www.opensubtitles.com" target="_blank" rel="noopener">opensubtitles.com</a>
       and get your API key from the
@@ -450,6 +455,7 @@ const STRINGS = {
     btn_confirm_match: '✓ Confirm and analyze first episode →',
     // Step 2
     btn_back: '← Back',
+    btn_next: 'Next →',
     btn_go_offset: 'Configure offset →',
     // Step 3
     offset_tracks_card: 'Reference tracks',
@@ -587,11 +593,13 @@ const STRINGS = {
     js_edit_batch_no_analyze: 'Analyze tracks first.',
     // Mux sub-app
     mux_step_file: 'File',
+    mux_step_analysis: 'Analysis',
     mux_step_actions: 'Actions',
     mux_step_tracks: 'Tracks',
     mux_step_mux: 'Mux',
-    mux_files_card: '🎬 Source MKV files',
-    btn_mux_add: '+ Add MKV file',
+    mux_analysis_card: 'Track summary',
+    mux_files_card: '🎬 Source files',
+    btn_mux_add: '+ Add file',
     btn_mux_analyze: 'Analyze tracks →',
     mux_tracks_card: '📋 Tracks',
     mux_th_num: '#',
@@ -720,7 +728,7 @@ const STRINGS = {
     js_srt_ready: '✓ SRT ready',
     js_download_failed: 'Download failed: ',
     js_use_this: 'Use this',
-    os_standalone_title: 'Download subtitle from OpenSubtitles',
+    os_standalone_title: 'Download subtitle from OpenSubtitles (beta)',
     os_dl_lang_label: 'Language:',
     os_standalone_from: 'From file:',
     js_fill_all: '✗ Fill in all fields',
@@ -761,7 +769,7 @@ const STRINGS = {
     // OS step
     step_os: 'OS',
     mux_step_os: 'OS',
-    os_step_title: '🌐 Download subtitles from OpenSubtitles',
+    os_step_title: '🌐 Download subtitles from OpenSubtitles (beta)',
     os_step_lang_label: 'Language:',
     os_step_file_label: 'From file:',
     os_step_search_btn: 'Search',
@@ -2046,7 +2054,9 @@ function renderTrackTable() {
     if (track.warn) tr.classList.add('warn-row');
 
     const infoStr = buildTrackInfoStr(track);
-    const srcBadge = `<span class="src-badge src-${track.source}">${track.source}</span>`;
+    const srcBadge = track.ffprobe_index < 0
+      ? `<span class="src-badge src-os">OS</span>`
+      : `<span class="src-badge src-${track.source}">${track.source}</span>`;
     const isAttachment = track.type === 'attachment';
     const langBadge = isAttachment ? '—'
       : track.unknown_lang
@@ -2079,12 +2089,19 @@ function renderTrackTable() {
            onchange="updateTrackField(${idx},'delay_ms',parseInt(this.value)||0)">`}</td>
       <td>${(track.type !== 'video' && !isAttachment) ? `<input type="checkbox" ${track.default?'checked':''} onchange="updateTrackField(${idx},'default',this.checked)">` : '—'}</td>
       <td>${track.type === 'subtitle' ? `<input type="checkbox" ${track.forced?'checked':''} onchange="updateTrackField(${idx},'forced',this.checked)">` : '—'}</td>
-      <td><input type="checkbox" ${track.include && track.action!=='discard'?'checked':''}
-           onchange="toggleTrackInclude(${idx},this.checked)"></td>
+      <td style="white-space:nowrap"><input type="checkbox" ${track.include && track.action!=='discard'?'checked':''}
+           onchange="toggleTrackInclude(${idx},this.checked)">${track.ffprobe_index < 0
+           ? ` <button class="btn btn-ghost btn-xs" onclick="syncRemoveOsTrack(${idx})" title="Rimuovi">✕</button>`
+           : ''}</td>
     `;
 
     tbody.appendChild(tr);
   });
+}
+
+function syncRemoveOsTrack(idx) {
+  S.trackTable.splice(idx, 1);
+  renderTrackTable();
 }
 
 function typeIcon(type) {
@@ -2997,11 +3014,15 @@ async function loadBrowser(path) {
   });
 
   if (!_browseDirsOnly && data.files) {
+    const _audioExts = new Set(['.ac3','.eac3','.dts','.flac','.aac','.truehd','.mka','.mp3','.wav','.ogg','.m4a','.opus']);
+    const _subExts   = new Set(['.srt','.ass','.ssa','.sup','.sub','.idx']);
     data.files.forEach(f => {
+      const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
+      const icon = _subExts.has(ext) ? '💬' : _audioExts.has(ext) ? '🔊' : '🎬';
       const li = document.createElement('li');
       li.className = 'browser-item file';
       li.innerHTML = `
-        <span class="item-icon">🎬</span>
+        <span class="item-icon">${icon}</span>
         <span class="item-name">${esc(f.name)}</span>
         <span class="item-size">${f.size_human}</span>`;
       li.onclick = () => selectFile(f.path, f.name);
@@ -4015,13 +4036,65 @@ async function mxAnalyzeAll() {
     mxRenderTrackTable();
     mxRenderActionsPanel(MX.suggestedActions);
     mxOsStepUpdateFileSel();
-    mxGoStep(MX.suggestedActions.length > 0 ? 2 : 3);
+    mxRenderAnalysisSummary();
+    mxGoStep(2);
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
   } finally {
     btn.disabled = MX.files.length === 0;
     btn.innerHTML = t('btn_mux_analyze');
   }
+}
+
+function mxRenderAnalysisSummary() {
+  const container = document.getElementById('muxAnalysisSummary');
+  if (!container) return;
+  container.innerHTML = '';
+  const byFile = {};
+  MX.tracks.forEach(tr => {
+    const idx = tr.source_file_idx;
+    if (!byFile[idx]) byFile[idx] = [];
+    byFile[idx].push(tr);
+  });
+  Object.keys(byFile).sort((a, b) => +a - +b).forEach(idx => {
+    const fname = MX.files[idx]?.name || `File ${+idx + 1}`;
+    const tracks = byFile[idx];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div class="card-title"><span class="icon">🎬</span>${esc(fname)}</div>`;
+    const types = ['video', 'audio', 'subtitle', 'attachment'];
+    const labels = { video: 'Video', audio: 'Audio', subtitle: t('js_subtitles_label'), attachment: 'Attachments' };
+    types.forEach(type => {
+      const group = tracks.filter(tr => tr.type === type);
+      if (!group.length) return;
+      const sec = document.createElement('div');
+      sec.className = 'track-section';
+      sec.innerHTML = `<div class="track-section-title">${labels[type]}</div>`;
+      group.forEach(tr => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        const tIcon = type === 'video' ? '🎬' : type === 'audio' ? '🔊' : type === 'attachment' ? '📎' : '💬';
+        const codecDisp = tr.mkv_codec || tr.codec || '?';
+        const infoStr = mxBuildInfoStr(tr);
+        const langBadge = tr.language
+          ? `<span class="badge" style="background:var(--badge-lang-bg,#1e3a5f);color:var(--badge-lang-text,#7ec8e3);font-size:0.72rem">${esc(tr.language.toUpperCase())}</span>`
+          : '';
+        row.innerHTML = `
+          <div class="track-info">
+            <span class="track-codec">${tIcon} ${esc(codecDisp)}</span>
+            <div class="track-detail">${esc(infoStr)}</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">${langBadge}</div>`;
+        sec.appendChild(row);
+      });
+      card.appendChild(sec);
+    });
+    container.appendChild(card);
+  });
+}
+
+function mxGoNextFromAnalysis() {
+  mxGoStep(MX.suggestedActions.length > 0 ? 3 : 4);
 }
 
 function mxRenderTrackTable() {
@@ -4031,9 +4104,10 @@ function mxRenderTrackTable() {
   MX.tracks.forEach((tr, idx) => {
     const tIcon = tr.type === 'video' ? '🎬' : tr.type === 'audio' ? '🔊'
                 : tr.type === 'attachment' ? '📎' : '💬';
-    const fname = MX.files[tr.source_file_idx]?.name || `File ${tr.source_file_idx + 1}`;
-    const colorClass = `src-f${tr.source_file_idx % 5}`;
-    const fshort = `F${tr.source_file_idx + 1}`;
+    const isOsTrack = tr.ffprobe_index < 0;
+    const fname = isOsTrack ? 'OpenSubtitles' : (MX.files[tr.source_file_idx]?.name || `File ${tr.source_file_idx + 1}`);
+    const colorClass = isOsTrack ? 'src-os' : `src-f${tr.source_file_idx % 5}`;
+    const fshort = isOsTrack ? 'OS' : `F${tr.source_file_idx + 1}`;
     const isVideo = tr.type === 'video';
     const isSub = tr.type === 'subtitle';
     const isAttach = tr.type === 'attachment';
@@ -4043,6 +4117,8 @@ function mxRenderTrackTable() {
       mxCodecExtra = ` <span class="badge badge-convert" style="font-size:0.7rem">→ ${esc(tr.codec_out.toUpperCase())}</span>`;
     } else if (tr.converted_path) {
       mxCodecExtra = ` <span class="badge badge-success" style="font-size:0.7rem">SRT ✓</span>`;
+    } else if (tr.action === 'ocr') {
+      mxCodecExtra = ` <span class="badge badge-convert" style="font-size:0.7rem">→ SRT (OCR)</span>`;
     }
     const infoStr = mxBuildInfoStr(tr);
 
@@ -4075,13 +4151,20 @@ function mxRenderTrackTable() {
         ? `<input type="checkbox" ${tr.forced ? 'checked' : ''}
              onchange="MX.tracks[${idx}].forced=this.checked">`
         : '—'}</td>
-      <td><input type="checkbox" ${tr.include ? 'checked' : ''}
-            onchange="mxToggleInclude(${idx}, this.checked)"></td>
+      <td style="white-space:nowrap"><input type="checkbox" ${tr.include ? 'checked' : ''}
+            onchange="mxToggleInclude(${idx}, this.checked)">${tr.ffprobe_index < 0
+            ? ` <button class="btn btn-ghost btn-xs" onclick="mxRemoveOsTrack(${idx})" title="Rimuovi">✕</button>`
+            : ''}</td>
     `;
     tbody.appendChild(row);
   });
 
   mxRenderBulkControls();
+}
+
+function mxRemoveOsTrack(idx) {
+  MX.tracks.splice(idx, 1);
+  mxRenderTrackTable();
 }
 
 function mxBuildInfoStr(tr) {
@@ -4209,7 +4292,7 @@ async function mxStartMux() {
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || t('js_error'));
 
-    mxGoStep(5);
+    mxGoStep(6);
     mxConnectSSE();
   } catch (e) {
     alert(t('js_error_prefix') + e.message);
@@ -4501,7 +4584,7 @@ function mxUpdateSubAction(sel) {
   const tr    = mxFindTrack(ffIdx, fi);
   if (tr) {
     if (val === 'discard')      { tr.include = false; tr.action = 'discard'; tr.converted_path = null; }
-    else if (val === 'download_srt') { tr.include = true;  tr.action = 'ocr';  tr.converted_path = null; }
+    else if (val === 'download_srt') { tr.include = true;  tr.action = 'ocr'; }
     else                        { tr.include = true;  tr.action = val;   tr.converted_path = null; }
   }
   const ocrCtrl = document.getElementById(`mxOcrLangCtrl_${ffIdx}_${fi}`);
@@ -4545,7 +4628,7 @@ function mxAcceptAllActions() {
     if (a.type === 'audio') mxUpdateAudioAction(sel);
     else mxUpdateSubAction(sel);
   });
-  mxGoStep(3);
+  mxGoStep(4);
 }
 
 async function mxOsSearchSubtitles(ffprobe_index, file_idx) {
@@ -5105,3 +5188,24 @@ async function osSaveCreds() {
 
 /* ── Apply language on init ─────────────────────────────────────────────── */
 applyLang();
+
+/* ── Version check ──────────────────────────────────────────────────────── */
+const APP_VERSION = '1.0';
+
+(function checkNewVersion() {
+  fetch('https://api.github.com/repos/linterista22/mkv-maximus/releases/latest', {cache: 'no-store'})
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.tag_name) return;
+      const latest = data.tag_name.replace(/^v/, '');
+      if (latest === APP_VERSION) return;
+      const banner = document.getElementById('newVersionBanner');
+      const tag    = document.getElementById('newVersionTag');
+      const link   = document.getElementById('newVersionLink');
+      if (!banner) return;
+      if (tag)  tag.textContent = data.tag_name;
+      if (link) link.href = data.html_url;
+      banner.style.display = '';
+    })
+    .catch(() => {});
+})();

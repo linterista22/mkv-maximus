@@ -76,9 +76,14 @@ def list_dir_mkv_only(path: str = "") -> dict:
 
 
 _MEDIA_EXTENSIONS = {
-    ".mkv", ".mp4", ".avi", ".mov", ".m4v", ".ts", ".m2ts", ".wmv",
-    ".webm", ".flv", ".mpg", ".mpeg", ".mp3", ".flac", ".aac", ".wav",
-    ".ogg", ".m4a", ".opus",
+    # video containers
+    ".mkv", ".mp4", ".m4v", ".avi", ".mov", ".ts", ".m2ts", ".wmv",
+    ".webm", ".flv", ".mpg", ".mpeg",
+    # standalone audio tracks
+    ".ac3", ".eac3", ".dts", ".flac", ".aac", ".truehd", ".mka",
+    ".mp3", ".wav", ".ogg", ".m4a", ".opus",
+    # standalone subtitle tracks
+    ".srt", ".ass", ".ssa", ".sup", ".sub", ".idx",
 }
 
 

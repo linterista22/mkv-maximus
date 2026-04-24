@@ -8,7 +8,9 @@ No subliminal dependency — direct API calls via httpx.
 
 import asyncio
 import os
+import re
 import struct
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -93,16 +95,65 @@ async def logout(token: str, api_key: str) -> None:
 
 # ── Search ───────────────────────────────────────────────────────────────────
 
+def _clean_title_query(filename_stem: str) -> str:
+    """
+    Extract a clean movie title from a filename stem for use as an OS query.
+    Strips year (YYYY), resolution, codec tags, release group suffixes.
+    """
+    s = filename_stem
+    # Stop at year in parentheses or brackets: "Movie Title (2023) ..." → "Movie Title"
+    s = re.sub(r"[\[\(]\d{4}[\]\)].*", "", s)
+    # Stop at standalone 4-digit year: "Movie Title 2023 ..." → "Movie Title"
+    s = re.sub(r"\b(19|20)\d{2}\b.*", "", s)
+    # Strip common release tags: resolution, codec, source, group
+    s = re.sub(r"\b(2160p|1080p|720p|480p|BluRay|WEB[-.]?DL|WEBRip|HDRip|BDRip|"
+               r"HEVC|H\.?265|H\.?264|AVC|AAC|DTS|FLAC|x265|x264|REMUX|"
+               r"HDR|SDR|DoVi|Atmos|TrueHD|DDP|DD)\b.*", "", s, flags=re.IGNORECASE)
+    # Replace dots/underscores used as separators with spaces
+    s = re.sub(r"[._]", " ", s)
+    return s.strip()
+
+
+def _parse_os_items(raw_items: list[dict], movie_hash: str) -> list[dict]:
+    """Convert raw OpenSubtitles API items to result dicts."""
+    results = []
+    for item in raw_items:
+        attrs = item.get("attributes", {})
+        files = attrs.get("files", [])
+        if not files:
+            print(
+                f"[OS search] skipped item (no files): id={item.get('id')} "
+                f"lang={attrs.get('language')} release={attrs.get('release', '')[:60]}",
+                file=sys.stderr, flush=True,
+            )
+            continue
+        f0 = files[0]
+        results.append({
+            "file_id":          f0.get("file_id"),
+            "filename":         f0.get("file_name", "subtitle.srt"),
+            "uploader":         attrs.get("uploader", {}).get("name", ""),
+            "downloads":        attrs.get("download_count", 0),
+            "rating":           round(float(attrs.get("ratings", 0) or 0), 1),
+            "release":          attrs.get("release", ""),
+            "fps":              attrs.get("fps", 0),
+            "hearing_impaired": attrs.get("hearing_impaired", False),
+            "hash":             movie_hash,
+            "hash_match":       attrs.get("moviehash_match", False),
+        })
+    return results
+
+
 async def search_by_hash(
     mkv_path: str,
     language: str,
     api_key: str,
     token: str,
-) -> list[dict]:
+    fallback_query: str = "",
+) -> tuple[list[dict], str, int]:
     """
-    Search subtitles by movie hash.
-    Returns list of result dicts, ordered by download count.
-    Each dict: {file_id, filename, uploader, downloads, rating, release, fps, hearing_impaired}
+    Search subtitles by movie hash.  If hash search returns 0 results and
+    fallback_query is provided, retries with a title-based query search.
+    Returns (results, movie_hash, api_total).
     """
     movie_hash = await asyncio.to_thread(compute_hash, mkv_path)
 
@@ -112,6 +163,7 @@ async def search_by_hash(
             params={
                 "moviehash": movie_hash,
                 "languages": language,
+                "moviehash_match": "include",
                 "order_by": "download_count",
                 "order_direction": "desc",
             },
@@ -119,32 +171,83 @@ async def search_by_hash(
                 "Api-Key": api_key,
                 "Authorization": f"Bearer {token}",
                 "User-Agent": OS_USER_AGENT,
+                "Content-Type": "application/json",
             },
+        )
+        print(
+            f"[OS search] hash={movie_hash} lang={language} "
+            f"status={r.status_code} url={r.url}",
+            file=sys.stderr, flush=True,
+        )
+        if r.status_code == 401:
+            raise RuntimeError("Token scaduto o non valido (401)")
+        r.raise_for_status()
+        raw_body = r.text
+        print(f"[OS search] raw response: {raw_body[:2000]}", file=sys.stderr, flush=True)
+        data = r.json()
+
+    raw_items = data.get("data", [])
+    total_count = data.get("total_count", len(raw_items))
+    print(
+        f"[OS search] total_count={total_count} raw_items={len(raw_items)}",
+        file=sys.stderr, flush=True,
+    )
+
+    results = _parse_os_items(raw_items, movie_hash)
+
+    # Fallback: title-based search when hash finds nothing
+    if total_count == 0 and fallback_query:
+        query = _clean_title_query(fallback_query)
+        if query:
+            print(
+                f"[OS search] hash found 0 results — falling back to query: '{query}'",
+                file=sys.stderr, flush=True,
+            )
+            fb_results, fb_total = await _search_by_query(query, language, api_key, token, movie_hash)
+            if fb_results:
+                return fb_results, movie_hash, fb_total
+
+    return results, movie_hash, total_count
+
+
+async def _search_by_query(
+    query: str,
+    language: str,
+    api_key: str,
+    token: str,
+    movie_hash: str = "",
+) -> tuple[list[dict], int]:
+    """Title-based subtitle search (fallback when hash returns 0 results)."""
+    async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+        r = await client.get(
+            f"{OS_API_BASE}/subtitles",
+            params={
+                "query": query,
+                "languages": language,
+                "order_by": "download_count",
+                "order_direction": "desc",
+            },
+            headers={
+                "Api-Key": api_key,
+                "Authorization": f"Bearer {token}",
+                "User-Agent": OS_USER_AGENT,
+                "Content-Type": "application/json",
+            },
+        )
+        print(
+            f"[OS query] query='{query}' lang={language} status={r.status_code}",
+            file=sys.stderr, flush=True,
         )
         if r.status_code == 401:
             raise RuntimeError("Token scaduto o non valido (401)")
         r.raise_for_status()
         data = r.json()
 
-    results = []
-    for item in data.get("data", []):
-        attrs = item.get("attributes", {})
-        files = attrs.get("files", [])
-        if not files:
-            continue
-        f0 = files[0]
-        results.append({
-            "file_id":         f0.get("file_id"),
-            "filename":        f0.get("file_name", "subtitle.srt"),
-            "uploader":        attrs.get("uploader", {}).get("name", ""),
-            "downloads":       attrs.get("download_count", 0),
-            "rating":          round(float(attrs.get("ratings", 0) or 0), 1),
-            "release":         attrs.get("release", ""),
-            "fps":             attrs.get("fps", 0),
-            "hearing_impaired": attrs.get("hearing_impaired", False),
-            "hash":            movie_hash,
-        })
-    return results
+    raw_items = data.get("data", [])
+    total_count = data.get("total_count", len(raw_items))
+    print(f"[OS query] total_count={total_count}", file=sys.stderr, flush=True)
+    results = _parse_os_items(raw_items, movie_hash)
+    return results, total_count
 
 
 # ── Download ─────────────────────────────────────────────────────────────────

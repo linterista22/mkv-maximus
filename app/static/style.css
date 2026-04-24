@@ -676,6 +676,7 @@ input:focus, select:focus {
 
 .src-video { background: rgba(100,181,246,0.15); color: var(--info); }
 .src-source { background: rgba(76,175,110,0.15); color: var(--success); }
+.src-os { background: rgba(255,183,77,0.15); color: #ffb74d; }
 /* Mux: palette per file sorgente (ciclica ogni 5 file) */
 .src-f0 { background: rgba(100,181,246,0.15); color: var(--info); }
 .src-f1 { background: rgba(76,175,110,0.15); color: var(--success); }
@@ -1022,6 +1023,34 @@ input:focus, select:focus {
   white-space: pre;
   word-break: normal;
   line-height: 1.5;
+}
+
+/* ── PR2: Probe compact syntesis card ────────────────────────────────────── */
+.probe-syntesis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.6rem;
+}
+.ps-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.ps-icon {
+  width: 1.25rem;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+.ps-track + .ps-track::before {
+  content: ' · ';
+  color: var(--text-muted);
 }
 
 /* ── Edit section ────────────────────────────────────────────────────────── */
