@@ -18,18 +18,6 @@ data/
 .env
 .DS_Store
 
-# Claude Code
-.claude/
-
-# Git worktrees
-.worktrees/
-
-# Private dev files (not for public repo)
-CLAUDE.md
-TODOLIST.md
-Implementazioni.txt
-docs/
-
 # Python packaging
 *.pyd
 .pytest_cache/
