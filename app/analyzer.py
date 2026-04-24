@@ -2,7 +2,6 @@
 # Copyright (C) 2026 linterista22
 import asyncio
 import json
-import re
 from typing import Optional
 
 
