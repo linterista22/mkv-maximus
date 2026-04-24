@@ -381,6 +381,7 @@ const STRINGS = {
     step_os: 'OS',
     mux_step_os: 'OS',
     os_step_title: '🌐 Scarica sottotitoli da OpenSubtitles (beta)',
+    os_beta_notice: '⚠ Funzionalità beta — potrebbe non funzionare correttamente in tutti i casi.',
     os_step_lang_label: 'Lingua:',
     os_step_file_label: 'Da file:',
     os_step_search_btn: 'Cerca',
@@ -770,6 +771,7 @@ const STRINGS = {
     step_os: 'OS',
     mux_step_os: 'OS',
     os_step_title: '🌐 Download subtitles from OpenSubtitles (beta)',
+    os_beta_notice: '⚠ Beta feature — may not work correctly in all cases.',
     os_step_lang_label: 'Language:',
     os_step_file_label: 'From file:',
     os_step_search_btn: 'Search',
@@ -3289,16 +3291,27 @@ function switchProbeFormat(fmt) {
   showProbeOutput();
 }
 
+function _copyFallback(txt) {
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { return document.execCommand('copy'); }
+  catch (_) { return false; }
+  finally { document.body.removeChild(ta); }
+}
+
 function probeCopy() {
   const txt = document.getElementById('probeOutput').textContent;
-  navigator.clipboard.writeText(txt).then(() => {
-    const btn = document.getElementById('probeCopyBtn');
-    const orig = btn.textContent;
-    btn.textContent = t('js_copied');
-    setTimeout(() => { btn.textContent = orig; }, 1500);
-  }).catch(() => {
-    alert(t('js_copy_failed'));
-  });
+  const btn = document.getElementById('probeCopyBtn');
+  const orig = btn.textContent;
+  const ok = () => { btn.textContent = t('js_copied'); setTimeout(() => { btn.textContent = orig; }, 1500); };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(ok).catch(() => alert(t('js_copy_failed')));
+  } else {
+    _copyFallback(txt) ? ok() : alert(t('js_copy_failed'));
+  }
 }
 
 function probeDownload() {
@@ -3417,11 +3430,11 @@ function switchProbeFolderDetailFormat(fmt) {
 
 function probeFolderDetailCopy() {
   const txt = document.getElementById('probeFolderDetailOutput').textContent;
-  navigator.clipboard.writeText(txt).then(() => {
-    showAlert(t('js_copied'), 'success');
-  }).catch(() => {
-    alert(t('js_copy_failed'));
-  });
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => showAlert(t('js_copied'), 'success')).catch(() => alert(t('js_copy_failed')));
+  } else {
+    _copyFallback(txt) ? showAlert(t('js_copied'), 'success') : alert(t('js_copy_failed'));
+  }
 }
 
 function probeFolderDetailDownload() {
