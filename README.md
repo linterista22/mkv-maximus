@@ -23,6 +23,7 @@ Full MKV track assembly, metadata editing and media analysis — everything you'
 - 🎵 **Signature mode** — identifies the opening theme in every episode automatically, no manual timestamps
 - 🔊 **On-the-fly audio conversion** — DTS, TrueHD and PCM detected and converted to FLAC or AC3 before muxing, no extra steps
 - 📝 **VobSub → SRT OCR** — converts bitmap subtitles to text directly in the UI, no external tools needed
+- 🌐 **OpenSubtitles integration** *(beta)* — search and download SRT subtitles from opensubtitles.com directly inside the Sync and Mux wizards
 
 ---
 
@@ -32,7 +33,7 @@ Full MKV track assembly, metadata editing and media analysis — everything you'
 |---|---|
 | **Sync** | Match audio and subtitle tracks from a different release onto your video file. Calculates sync offset automatically. Handles conversions and OCR. Single file or full season. |
 | **Probe** | Full media analysis via MediaInfo and ffprobe. Compact track summary at a glance. Single file or batch folder scan. Copy or download the report. |
-| **Mux** | Assemble tracks from multiple MKV files into one output. Per-track delay, language, flags and title. Detects incompatible codecs and suggests fixes before muxing. |
+| **Mux** | Assemble tracks from multiple MKV files into one output. Per-track delay, language, flags and title. Detects incompatible codecs and suggests fixes. Optional OpenSubtitles download *(beta)*. |
 | **Edit** | Change track language, title, flags, chapters and attachments without touching the video. Instant, no remux. Batch mode for entire seasons. |
 
 ---

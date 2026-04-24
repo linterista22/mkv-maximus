@@ -66,15 +66,17 @@ Click **Calculate offset**. You get:
 - **Score** — reliability indicator: ≥ 20 green · 10–19 yellow · < 10 red (mux blocked)
 - **Drift** — if > 200 ms, a warning is shown
 
-**Step 4 — Output**
+**Step 4 — OpenSubtitles** *(optional, beta)*
 
-Set the output folder, filename (auto-suggested) and title tag. Configure chapters: generate every N minutes / keep from video file / keep from source / none.
+> ⚠ Beta feature — may not work correctly in all cases.
 
-**Step 5 — Track table**
+Select language, click **Search**. Results are ranked by match quality. Select a subtitle and it is added as a new SRT track row in the next step. Click **Skip** to proceed without downloading.
+
+**Step 5 — Track table & output**
 
 Full control over what goes into the output: toggle include, set default and forced flags, edit title, adjust delay. Bulk controls for audio and subtitle tracks.
 
-A collapsible **📥 Download subtitle from OpenSubtitles** *(beta)* panel is also available — select language, search, pick a result, and the SRT is added as a new track row.
+Set the output folder, filename (auto-suggested) and title tag. Configure chapters: generate every N minutes / keep from video file / keep from source / none.
 
 **Step 6 — Mux**
 
@@ -150,13 +152,29 @@ Add MKV files with **+ Add file**. Remove with **✕**. Order determines the sou
 
 All tracks from all files in a unified table. For each track: toggle include, set default/forced flags, edit language, title, delay. Bulk controls by track type and source file.
 
-If incompatible codecs are detected, a **Suggested actions** panel appears — identical to Sync. For VobSub: **Convert OCR** or **Download SRT** *(beta)*.
+**Step 3 — Suggested actions** *(skipped automatically if no issues)*
 
-A collapsible **📥 Download subtitle from OpenSubtitles** *(beta)* panel is always available — no VobSub required.
+If incompatible codecs are detected, a panel lists the recommended actions:
 
-Set output folder, filename, title tag and chapter mode.
+| Action | Effect |
+|---|---|
+| Convert | Transcode before muxing (FLAC, AC3) |
+| Passthrough | Copy as-is |
+| Discard | Exclude from output |
 
-**Step 3 — Mux**
+For VobSub tracks: **Convert OCR** (Tesseract) or **Download SRT** *(beta)*.
+
+**Step 4 — OpenSubtitles** *(optional, beta)*
+
+> ⚠ Beta feature — may not work correctly in all cases.
+
+Select language and source file, click **Search**. Pick a result to add it as an SRT track. Click **Skip** to continue without downloading.
+
+**Step 5 — Track table & output**
+
+Per-track delay, language, flags, title. Set output folder, filename, title tag and chapter mode.
+
+**Step 6 — Mux**
 
 Click **Start mux**. Live SSE log, same as Sync.
 

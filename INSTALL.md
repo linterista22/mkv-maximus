@@ -122,21 +122,7 @@ The script:
 - Copies `docker-compose.yml` to `/var/lib/casaos/apps/mkv-maximus/` so CasaOS can manage it
 - Restarts the CasaOS app-management service
 
-**4. App icon in CasaOS**
-
-After the repo is public on GitHub, update the `icon` fields in `docker-compose.yml` to use the raw GitHub URL:
-
-```yaml
-labels:
-  icon: https://raw.githubusercontent.com/linterista22/mkv-maximus/main/app/static/icon.png
-
-x-casaos:
-  icon: https://raw.githubusercontent.com/linterista22/mkv-maximus/main/app/static/icon.png
-```
-
-Then redeploy. CasaOS will display the correct icon in the app launcher.
-
-**5. Open the app**
+**4. Open the app**
 
 Click the MKV Maximus card in the CasaOS launcher, or go directly to:
 
