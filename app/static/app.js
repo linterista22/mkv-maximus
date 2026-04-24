@@ -864,6 +864,71 @@ function applyLang() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILS — helper condivisi
+══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Apre una connessione SSE con reconnect automatico ogni 2s in caso di errore.
+ * Restituisce un oggetto { close() } per terminare la connessione.
+ *
+ * @param {string}   url        - URL dell'endpoint SSE
+ * @param {Function} onMessage  - handler per i messaggi (ev => …)
+ * @param {Function} [onDone]   - callback opzionale chiamata su close()
+ */
+function sseConnect(url, onMessage, onDone) {
+  let es = null;
+  let closed = false;
+
+  function connect() {
+    if (closed) return;
+    es = new EventSource(url);
+    es.onmessage = onMessage;
+    es.onerror = () => {
+      es.close();
+      if (!closed) setTimeout(connect, 2000);
+    };
+  }
+
+  connect();
+
+  return {
+    close() {
+      closed = true;
+      if (es) es.close();
+      if (onDone) onDone();
+    }
+  };
+}
+
+/**
+ * Crea un wizard multi-step con show/hide dei pannelli e aggiornamento dei pill di navigazione.
+ *
+ * @param {Object}   opts
+ * @param {string[]} opts.stepIds   - array di ID dei pannelli step (in ordine)
+ * @param {string}   opts.navPrefix - prefisso ID dei bottoni nav (es. 'szNav' → cerca [id^="szNav"])
+ */
+function makeWizard({ stepIds, navPrefix }) {
+  let _current = 0;
+
+  function goTo(n) {
+    stepIds.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = i === n ? '' : 'none';
+    });
+    if (navPrefix) {
+      document.querySelectorAll(`[id^="${navPrefix}"]`).forEach((btn, i) => {
+        btn.classList.toggle('active', i === n);
+      });
+    }
+    _current = n;
+  }
+
+  function current() { return _current; }
+
+  return { goTo, current };
+}
+
 /* ── State ──────────────────────────────────────────────────────────────── */
 const S = {
   mode: 'single',
@@ -2484,19 +2549,10 @@ function startSSE() {
 
 function _connectSSE() {
   if (!_sseJobActive) return;
-  const es = new EventSource('/api/mux/progress');
-  S.sseSource = es;
-
-  es.onmessage = (e) => {
+  S.sseSource = sseConnect('/api/mux/progress', (e) => {
     const ev = JSON.parse(e.data);
     handleSSEEvent(ev);
-  };
-
-  es.onerror = () => {
-    es.close();
-    S.sseSource = null;
-    if (_sseJobActive) setTimeout(_connectSSE, 2000);
-  };
+  });
 }
 
 function handleSSEEvent(ev) {
@@ -4166,15 +4222,12 @@ async function mxStartMux() {
 function mxConnectSSE() {
   if (MX.sseSource) { MX.sseSource.close(); MX.sseSource = null; }
 
-  const src = new EventSource('/api/mux/progress');
-  MX.sseSource = src;
-
   const logEl   = document.getElementById('muxLogOutput');
   const barEl   = document.getElementById('muxProgressBar');
   const pctEl   = document.getElementById('muxProgressPct');
   const phaseEl = document.getElementById('muxPhaseLabel');
 
-  src.onmessage = ev => {
+  MX.sseSource = sseConnect('/api/mux/progress', ev => {
     let d; try { d = JSON.parse(ev.data); } catch { return; }
 
     if (d.event === 'progress' || d.event === 'status') {
@@ -4194,21 +4247,17 @@ function mxConnectSSE() {
         logEl.scrollTop = logEl.scrollHeight;
       }
     } else if (d.event === 'done') {
-      src.close(); MX.sseSource = null;
+      MX.sseSource.close(); MX.sseSource = null;
       barEl.style.width = '100%'; barEl.classList.remove('indeterminate');
       pctEl.textContent = '100%';
       mxShowResult(d);
     } else if (d.event === 'error') {
-      src.close(); MX.sseSource = null;
+      MX.sseSource.close(); MX.sseSource = null;
       const errEl = document.getElementById('muxErrorAlert');
       errEl.textContent = '✗ ' + d.message;
       errEl.classList.remove('hidden');
     }
-  };
-
-  src.onerror = () => {
-    if (MX.sseSource) setTimeout(mxConnectSSE, 2000);
-  };
+  });
 }
 
 function mxShowResult(d) {

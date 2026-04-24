@@ -785,13 +785,6 @@ input:focus, select:focus {
 
 .field-row input { flex: 1; }
 
-/* ── Divider ────────────────────────────────────────────────────────────── */
-.divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 1rem 0;
-}
-
 /* ── Alerts ─────────────────────────────────────────────────────────────── */
 .alert {
   padding: 0.65rem 0.9rem;
@@ -803,7 +796,6 @@ input:focus, select:focus {
   align-items: flex-start;
 }
 
-.alert-info    { background: rgba(100,181,246,0.1); border: 1px solid rgba(100,181,246,0.3); color: var(--info); }
 .alert-warn    { background: rgba(255,179,71,0.1);  border: 1px solid rgba(255,179,71,0.3);  color: var(--warning); }
 .alert-danger  { background: rgba(239,83,80,0.1);   border: 1px solid rgba(239,83,80,0.3);   color: var(--danger); }
 .alert-success { background: rgba(76,175,110,0.1);  border: 1px solid rgba(76,175,110,0.3);  color: var(--success); }
@@ -820,10 +812,6 @@ input:focus, select:focus {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Signature mode ─────────────────────────────────────────────────────── */
-.sig-fields { display: none; }
-.sig-fields.visible { display: block; }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
@@ -973,18 +961,9 @@ input:focus, select:focus {
 .hub-card:hover { border-color: var(--primary); background: var(--surface2); }
 .hub-card:active { transform: scale(0.97); }
 
-.hub-card-soon { opacity: 0.55; cursor: default; }
-.hub-card-soon:hover { border-color: var(--border); background: var(--surface); }
-.hub-card-soon:active { transform: none; }
-
 .hub-card-icon { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; }
 .hub-card-name { font-size: 1.05rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.4rem; }
 .hub-card-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
-.hub-soon-badge {
-  font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
-  background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border);
-  padding: 0.1rem 0.35rem; border-radius: 3px; letter-spacing: 0.05em;
-}
 
 /* ── Chapters panel ──────────────────────────────────────────────────────── */
 .chapters-options { display: flex; flex-direction: column; gap: 0.5rem; }
