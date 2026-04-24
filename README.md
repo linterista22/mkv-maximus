@@ -1,6 +1,6 @@
 # MKV Maximus
 
-**MKVToolNix and MediaInfo, finally in your browser. Plus the features no one else has.**
+**Edit your MKVs however, whenever, and wherever you want. Extremely powerful tools paired with a Web UI like no other.**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 ![Version](https://img.shields.io/badge/version-1.0-green)
