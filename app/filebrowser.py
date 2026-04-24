@@ -20,48 +20,48 @@ def _validate_path(path: str) -> Path:
     return p
 
 
-def list_dir(path: str = "") -> dict:
-    """List directory contents. Only shows .mkv files and subdirectories."""
-    p = _validate_path(path or str(STORAGE_ROOT))
-
-    if not p.exists():
-        raise FileNotFoundError(f"Path not found: {path}")
-    if not p.is_dir():
-        raise NotADirectoryError(f"Not a directory: {path}")
-
-    dirs = []
-    files = []
-
+def _iter_dir(p: Path) -> tuple[list[dict], list[dict]]:
+    """
+    Itera una directory validata e restituisce (dirs, files_with_stat).
+    Il caller filtra files per estensione.
+    """
+    dirs: list[dict] = []
+    files: list[dict] = []
     try:
         entries = sorted(p.iterdir(), key=lambda e: (e.is_file(), e.name.lower()))
     except PermissionError:
-        return {
-            "path": str(p),
-            "parent": str(p.parent) if p != STORAGE_ROOT else None,
-            "dirs": [],
-            "files": [],
-        }
-
+        return [], []
     for entry in entries:
         if entry.name.startswith("."):
             continue
         try:
             if entry.is_dir():
-                dirs.append({
-                    "name": entry.name,
-                    "path": str(entry),
-                })
-            elif entry.is_file() and entry.suffix.lower() == ".mkv":
+                dirs.append({"name": entry.name, "path": str(entry)})
+            elif entry.is_file():
                 stat = entry.stat()
                 files.append({
                     "name": entry.name,
                     "path": str(entry),
+                    "suffix": entry.suffix.lower(),
                     "size": stat.st_size,
                     "size_human": _human_size(stat.st_size),
                 })
         except (PermissionError, OSError):
             continue
+    return dirs, files
 
+
+def list_dir(path: str = "") -> dict:
+    """List directory contents. Only shows .mkv files and subdirectories."""
+    p = _validate_path(path or str(STORAGE_ROOT))
+    if not p.exists():
+        raise FileNotFoundError(f"Path not found: {path}")
+    if not p.is_dir():
+        raise NotADirectoryError(f"Not a directory: {path}")
+    dirs, all_files = _iter_dir(p)
+    files = [f for f in all_files if f["suffix"] == ".mkv"]
+    for f in files:
+        del f["suffix"]
     return {
         "path": str(p),
         "parent": str(p.parent) if p != STORAGE_ROOT else None,
@@ -85,42 +85,14 @@ _MEDIA_EXTENSIONS = {
 def list_dir_media(path: str = "") -> dict:
     """List directory contents showing all media files (not just .mkv)."""
     p = _validate_path(path or str(STORAGE_ROOT))
-
     if not p.exists():
         raise FileNotFoundError(f"Path not found: {path}")
     if not p.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
-
-    dirs = []
-    files = []
-
-    try:
-        entries = sorted(p.iterdir(), key=lambda e: (e.is_file(), e.name.lower()))
-    except PermissionError:
-        return {
-            "path": str(p),
-            "parent": str(p.parent) if p != STORAGE_ROOT else None,
-            "dirs": [],
-            "files": [],
-        }
-
-    for entry in entries:
-        if entry.name.startswith("."):
-            continue
-        try:
-            if entry.is_dir():
-                dirs.append({"name": entry.name, "path": str(entry)})
-            elif entry.is_file() and entry.suffix.lower() in _MEDIA_EXTENSIONS:
-                stat = entry.stat()
-                files.append({
-                    "name": entry.name,
-                    "path": str(entry),
-                    "size": stat.st_size,
-                    "size_human": _human_size(stat.st_size),
-                })
-        except (PermissionError, OSError):
-            continue
-
+    dirs, all_files = _iter_dir(p)
+    files = [f for f in all_files if f["suffix"] in _MEDIA_EXTENSIONS]
+    for f in files:
+        del f["suffix"]
     return {
         "path": str(p),
         "parent": str(p.parent) if p != STORAGE_ROOT else None,
@@ -130,38 +102,13 @@ def list_dir_media(path: str = "") -> dict:
 
 
 def list_dir_any(path: str = "") -> dict:
-    """Variant that also shows non-MKV files (for folder selection)."""
+    """Variant that shows only directories (for folder selection)."""
     p = _validate_path(path or str(STORAGE_ROOT))
-
     if not p.exists():
         raise FileNotFoundError(f"Path not found: {path}")
     if not p.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
-
-    dirs = []
-
-    try:
-        entries = sorted(p.iterdir(), key=lambda e: (e.is_file(), e.name.lower()))
-    except PermissionError:
-        return {
-            "path": str(p),
-            "parent": str(p.parent) if p != STORAGE_ROOT else None,
-            "dirs": [],
-            "files": [],
-        }
-
-    for entry in entries:
-        if entry.name.startswith("."):
-            continue
-        try:
-            if entry.is_dir():
-                dirs.append({
-                    "name": entry.name,
-                    "path": str(entry),
-                })
-        except (PermissionError, OSError):
-            continue
-
+    dirs, _ = _iter_dir(p)
     return {
         "path": str(p),
         "parent": str(p.parent) if p != STORAGE_ROOT else None,
