@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 linterista22
 """
-Unit tests for audio_merge — pure Python logic, no external tools required.
+Unit tests for mkv_maximus — pure Python logic, no external tools required.
 Run from project root:
     python -m pytest tests/ -v
     # or
