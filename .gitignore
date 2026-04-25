@@ -16,6 +16,7 @@ data/
 
 # Environment and OS
 .env
+docker-compose.override.yml
 .DS_Store
 
 # Python packaging

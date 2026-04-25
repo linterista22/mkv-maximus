@@ -1,0 +1,18 @@
+# docker-compose.override.example.yml
+#
+# Use this file to mount additional drives without touching docker-compose.yml.
+# docker-compose.yml is updated by git pull — this file never is.
+#
+# Steps:
+#   1. Copy this file:  cp docker-compose.override.example.yml docker-compose.override.yml
+#   2. Edit docker-compose.override.yml with your actual paths
+#   3. Run:  docker compose up -d  (override is merged automatically)
+#
+# docker-compose.override.yml is listed in .gitignore — it is never overwritten by updates.
+
+services:
+  mkv_maximus:
+    volumes:
+      - /media/youruser/HDD2:/storage/HDD2:rw
+      # - /mnt/NAS:/storage/NAS:rw
+      # - /media/youruser/HDD3:/storage/HDD3:rw

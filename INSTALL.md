@@ -36,14 +36,20 @@ MEDIA_PATH=/media/youruser/HDD
 
 This file is listed in `.gitignore` — it is never overwritten by `git pull`. You set it once and forget it.
 
-**Multiple drives:** add extra volume lines directly in `docker-compose.yml` under `volumes:`:
+**Multiple drives:** use `docker-compose.override.yml` — Docker Compose merges it automatically on top of `docker-compose.yml`, and it is listed in `.gitignore` so it is never overwritten by updates.
+
+```bash
+cp docker-compose.override.example.yml docker-compose.override.yml
+```
+
+Edit `docker-compose.override.yml` with your actual paths:
 
 ```yaml
-volumes:
-  - ${MEDIA_PATH:-/path/to/your/media}:/storage:rw
-  - /media/youruser/HDD2:/storage/HDD2:rw
-  - /mnt/NAS:/storage/NAS:rw
-  - /DATA/AppData/mkv-maximus/data:/app/data
+services:
+  mkv_maximus:
+    volumes:
+      - /media/youruser/HDD2:/storage/HDD2:rw
+      - /mnt/NAS:/storage/NAS:rw
 ```
 
 The file browser will show all drives under `/storage` as subfolders.
@@ -79,7 +85,7 @@ git pull
 sudo bash deploy.sh
 ```
 
-Your `.env` (storage path) and `/DATA/AppData/mkv-maximus/data/` (config and history) are never touched by updates.
+Your `.env` (storage path), `docker-compose.override.yml` (extra volumes) and `/DATA/AppData/mkv-maximus/data/` (config and history) are never touched by updates.
 
 ### Stopping
 
