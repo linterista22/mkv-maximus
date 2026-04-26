@@ -1141,3 +1141,33 @@ input:focus, select:focus {
 .sz-status-uncertain { color: var(--warning); }
 .sz-status-low       { color: var(--danger); font-weight: 600; }
 .sz-status-error     { color: var(--danger); font-weight: 600; }
+
+/* ── Tool accent colors ──────────────────────────────────────────────────── */
+body.tool-sync  { --tool-color: #4f8ef7; --tool-text: #fff; }
+body.tool-probe { --tool-color: #4caf6e; --tool-text: #fff; }
+body.tool-edit  { --tool-color: #ffb347; --tool-text: #1a1d27; }
+body.tool-mux   { --tool-color: #64b5f6; --tool-text: #1a1d27; }
+
+body[class*="tool-"] .step-pill.active {
+  background: var(--tool-color);
+  border-color: var(--tool-color);
+  color: var(--tool-text);
+}
+body[class*="tool-"] .step-pill.done {
+  color: var(--tool-color);
+  border-color: var(--tool-color);
+}
+body[class*="tool-"] .btn-primary {
+  background: var(--tool-color);
+  color: var(--tool-text);
+}
+body[class*="tool-"] .progress-bar:not(.success):not(.indeterminate) {
+  background: var(--tool-color);
+}
+body[class*="tool-"] .hdr-back {
+  border-color: var(--tool-color);
+  color: var(--tool-color);
+}
+body[class*="tool-"] #headerSubtitle {
+  color: var(--tool-color);
+}
