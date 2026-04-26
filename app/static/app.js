@@ -16,7 +16,6 @@ const STRINGS = {
     info_author: 'Autore',
     info_version: 'Versione',
     info_license: 'Licenza',
-    info_coming_soon: '— in arrivo —',
     // Hub
     hub_settings_btn: '⚙ Impostazioni',
     hub_sync_desc: 'Sincronizza audio tra release diverse e rimux in un click',
@@ -403,7 +402,6 @@ const STRINGS = {
     info_author: 'Author',
     info_version: 'Version',
     info_license: 'License',
-    info_coming_soon: '— coming soon —',
     // Hub
     hub_settings_btn: '⚙ Settings',
     hub_sync_desc: 'Sync audio across different releases and remux in one click',
