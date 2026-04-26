@@ -731,15 +731,11 @@
 
   <div class="card">
     <!-- Mode toggle -->
-    <div style="display:flex;gap:0.5rem;margin-bottom:0.85rem">
-      <label style="flex:1;display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:6px">
-        <input type="radio" name="editMode" value="single" checked onchange="toggleEditMode('single')">
-        <span data-i18n="edit_mode_single">Singolo file</span>
-      </label>
-      <label style="flex:1;display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:6px">
-        <input type="radio" name="editMode" value="batch" onchange="toggleEditMode('batch')">
-        <span data-i18n="edit_mode_batch">Cartella stagione</span>
-      </label>
+    <div class="mode-toggle">
+      <input type="radio" name="editMode" id="editModeSingle" value="single" checked onchange="toggleEditMode('single')">
+      <label for="editModeSingle" data-i18n="edit_mode_single">📄 Singolo file</label>
+      <input type="radio" name="editMode" id="editModeBatch" value="batch" onchange="toggleEditMode('batch')">
+      <label for="editModeBatch" data-i18n="edit_mode_batch">📂 Cartella stagione</label>
     </div>
 
     <div class="card-title"><span class="icon">📝</span> <span id="editFileCardTitle" data-i18n="edit_file_card">File MKV</span></div>
