@@ -17,7 +17,6 @@ const STRINGS = {
     info_version: 'Versione',
     info_license: 'Licenza',
     info_coming_soon: '— in arrivo —',
-    info_license_val: 'GPL 3 — in arrivo —',
     // Hub
     hub_settings_btn: '⚙ Impostazioni',
     hub_sync_desc: 'Sincronizza audio tra release diverse e rimux in un click',
@@ -317,8 +316,6 @@ const STRINGS = {
     js_error: 'Errore',
     js_reconnecting: '(riconnessione)',
     js_no_history: 'Nessun job nella cronologia',
-    js_bug_report: 'Segnala il bug su GitHub:\nhttps://github.com/linterista22/mkv-maximus/issues',
-    js_license_text: 'GNU General Public License v3\nhttps://github.com/linterista22/mkv-maximus/blob/main/LICENSE',
     js_chapters_unit: 'capitoli',
     js_probe_analyzing: 'Analisi in corso…',
     js_probe_no_output: '— nessun output —',
@@ -407,7 +404,6 @@ const STRINGS = {
     info_version: 'Version',
     info_license: 'License',
     info_coming_soon: '— coming soon —',
-    info_license_val: 'GPL 3 — coming soon —',
     // Hub
     hub_settings_btn: '⚙ Settings',
     hub_sync_desc: 'Sync audio across different releases and remux in one click',
@@ -707,8 +703,6 @@ const STRINGS = {
     js_error: 'Error',
     js_reconnecting: '(reconnecting)',
     js_no_history: 'No jobs in history',
-    js_bug_report: 'Report the bug on GitHub:\nhttps://github.com/linterista22/mkv-maximus/issues',
-    js_license_text: 'GNU General Public License v3\nhttps://github.com/linterista22/mkv-maximus/blob/main/LICENSE',
     js_chapters_unit: 'chapters',
     js_probe_analyzing: 'Analyzing…',
     js_probe_no_output: '— no output —',
@@ -2832,11 +2826,11 @@ function openInfoModal() {
 }
 
 function openBugReport() {
-  alert(t('js_bug_report'));
+  window.open('https://github.com/linterista22/mkv-maximus/issues', '_blank', 'noopener');
 }
 
 function openLicense() {
-  alert(t('js_license_text'));
+  window.open('https://github.com/linterista22/mkv-maximus/blob/main/LICENSE', '_blank', 'noopener');
 }
 
 /* ── Alert helper ────────────────────────────────────────────────────────── */
