@@ -1165,7 +1165,7 @@ body[class*="tool-"] .progress-bar:not(.success):not(.indeterminate) {
   background: var(--tool-color);
 }
 body[class*="tool-"] .hdr-back {
-  border-color: var(--tool-color);
+  border: 1px solid var(--tool-color);
   color: var(--tool-color);
 }
 body[class*="tool-"] #headerSubtitle {
