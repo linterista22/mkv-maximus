@@ -2894,6 +2894,9 @@ function navigateTo(section) {
   const headerTitle = document.getElementById('headerTitle');
   const headerSub   = document.getElementById('headerSubtitle');
 
+  // Remove all tool accent classes
+  document.body.classList.remove('tool-sync', 'tool-probe', 'tool-edit', 'tool-mux');
+
   if (section === 'hub') {
     btnBack.classList.add('hidden');
     headerIcon.src = '/icon.png';
@@ -2905,6 +2908,9 @@ function navigateTo(section) {
     headerIcon.src = meta.icon || '/icon.png';
     headerTitle.textContent = meta.title || section;
     headerSub.textContent = meta.subtitle || '';
+    if (['sync', 'probe', 'edit', 'mux'].includes(section)) {
+      document.body.classList.add(`tool-${section}`);
+    }
   }
 
   if (section === 'settings') settingsLoad();
