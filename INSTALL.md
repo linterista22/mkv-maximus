@@ -1,6 +1,34 @@
 # MKV Maximus — Installation Guide
 
-Three installation methods are supported: **Docker** (recommended), **CasaOS**, and **bare-metal Linux**.
+Four installation methods are supported: **DockerHub** (quickest), **Docker** (recommended), **CasaOS**, and **bare-metal Linux**.
+
+---
+
+## Method 0 — DockerHub (quickest, no git clone required)
+
+Pull and run the pre-built image directly from DockerHub — no repository clone needed.
+
+```bash
+docker run -d \
+  --name mkv-maximus \
+  --restart unless-stopped \
+  -p 7788:7788 \
+  -v /your/media:/storage \
+  -v /DATA/AppData/mkv-maximus/data:/app/data \
+  linterista22/mkv-maximus:latest
+```
+
+Replace `/your/media` with your actual media drive path, then open `http://<your-server-ip>:7788`.
+
+**Updating to a new version:**
+
+```bash
+docker pull linterista22/mkv-maximus:latest
+docker stop mkv-maximus && docker rm mkv-maximus
+# re-run the docker run command above
+```
+
+Your data in `/DATA/AppData/mkv-maximus/data/` is preserved across updates.
 
 ---
 

@@ -40,6 +40,18 @@ Full MKV track assembly, metadata editing and media analysis — everything you'
 
 ## Get started
 
+**Quickest — pull from DockerHub (no git clone required):**
+
+```bash
+docker run -d --name mkv-maximus --restart unless-stopped \
+  -p 7788:7788 \
+  -v /your/media:/storage \
+  -v /DATA/AppData/mkv-maximus/data:/app/data \
+  linterista22/mkv-maximus:latest
+```
+
+**Or clone and build locally:**
+
 ```bash
 git clone https://github.com/linterista22/mkv-maximus.git
 cd mkv-maximus
