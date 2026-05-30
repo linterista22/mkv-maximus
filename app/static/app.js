@@ -1058,7 +1058,7 @@ async function loadBrowser(path) {
   try {
     const r = await fetch(url);
     data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
   } catch (e) {
     alert(t('js_browse_error') + e.message);
     return;
@@ -1167,7 +1167,7 @@ async function doMatchEpisodes() {
       body: JSON.stringify({ video_dir: S.seasonVideoDir, source_dir: S.seasonSourceDir }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     renderMatchResults(data);
   } catch (e) {
     showAlert(t('js_error_prefix') + e.message, 'danger');
@@ -1293,7 +1293,7 @@ async function doSeasonAnalyze() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     S.analysis = data;
     S.trackTable = JSON.parse(JSON.stringify(data.track_table));
@@ -1423,7 +1423,7 @@ async function doAnalyze() {
       body: JSON.stringify({ video_file: S.videoFile, source_file: S.sourceFile }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     S.analysis = data;
     S.trackTable = JSON.parse(JSON.stringify(data.track_table));
@@ -1932,7 +1932,7 @@ async function doCalcOffset() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     renderDualOffsetResult(data);
   } catch (e) {
     showAlert(t('js_error_prefix') + e.message, 'danger');
@@ -2052,10 +2052,6 @@ function renderTrackTable() {
       ? `<span class="src-badge src-os">OS</span>`
       : `<span class="src-badge src-${track.source}">${track.source}</span>`;
     const isAttachment = track.type === 'attachment';
-    const langBadge = isAttachment ? '—'
-      : track.unknown_lang
-        ? '<span class="badge badge-warn">⚠ ?</span>'
-        : (track.language ? `<span class="badge badge-lang">${esc(track.language.toUpperCase())}</span>` : '—');
 
     const codecDisplay = track.mkv_codec || track.codec || '?';
     let codecExtra = '';
@@ -2072,7 +2068,10 @@ function renderTrackTable() {
       <td>${typeIcon(track.type)} ${track.type}</td>
       <td>${srcBadge}</td>
       <td style="white-space:nowrap">${esc(codecDisplay)}${codecExtra}</td>
-      <td>${langBadge}</td>
+      <td>${isAttachment
+        ? '—'
+        : `<input type="text" value="${esc(track.language || '')}" style="width:55px;font-size:0.82rem"
+             placeholder="ita" onchange="updateTrackField(${idx},'language',this.value)">`}</td>
       <td>${isAttachment
         ? `<span style="font-size:0.85rem">${esc(track.title || '')}</span>`
         : `<input type="text" value="${esc(track.title || '')}"
@@ -2184,7 +2183,7 @@ async function doStartMux() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     S.jobId = data.job_id;
     goToStep(7);
@@ -2236,7 +2235,7 @@ async function doCalcBatchOffset() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     _connectOffsetSSE();
   } catch (e) {
     btn.disabled = false;
@@ -2297,7 +2296,7 @@ async function doCalcBatchOffsetSignature() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     _connectOffsetSSE();
   } catch (e) {
     btn.disabled = false;
@@ -2478,7 +2477,7 @@ async function doStartBatchFromSummary() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     S.jobId = data.job_id;
     document.getElementById('batchEpisodeList').classList.remove('hidden');
@@ -2527,7 +2526,7 @@ async function doStartBatch() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     S.jobId = data.job_id;
     document.getElementById('batchEpisodeList').classList.remove('hidden');
@@ -2850,6 +2849,13 @@ function esc(str) {
     .replace(/"/g, '&quot;');
 }
 
+function _errDetail(data) {
+  if (!data.detail) return null;
+  if (typeof data.detail === 'string') return data.detail;
+  if (Array.isArray(data.detail)) return data.detail.map(d => d.msg).join('; ');
+  return String(data.detail);
+}
+
 /* ── Init ────────────────────────────────────────────────────────────────── */
 goToStep(1);
 
@@ -2985,7 +2991,7 @@ async function loadBrowser(path) {
   try {
     const r = await fetch(url);
     data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
   } catch (e) {
     alert(t('js_browse_error') + e.message);
     return;
@@ -3338,7 +3344,7 @@ async function doProbeFolderAnalyze() {
       body: JSON.stringify({ folder: _probeFolderDir }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     renderProbeFolderResults(data);
   } catch (e) {
     showAlert(t('js_error_prefix') + e.message, 'danger');
@@ -3514,7 +3520,7 @@ async function doEditAnalyze() {
       body: JSON.stringify({ file: analyzeFile }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     document.getElementById('editFileTitle').value = data.file_title || '';
     _editTracks = data.tracks
@@ -3539,6 +3545,7 @@ async function doEditAnalyze() {
     }));
 
     _editChapters = (data.chapters || []).map(ch => ({
+      uid: ch.uid,
       num: ch.num,
       timestamp: ch.timestamp,
       name: ch.name,
@@ -3624,7 +3631,7 @@ async function doEditApply() {
     .map(a => a.id);
 
   const deleteAllChapters = document.getElementById('editChaptersDeleteFlag')?.value === '1';
-  const renameChapters = deleteAllChapters ? [] : _editChapters.map(ch => ({ num: ch.num, name: ch.name }));
+  const renameChapters = deleteAllChapters ? [] : _editChapters.map(ch => ({ uid: ch.uid, name: ch.name }));
 
   try {
     const r = await fetch('/api/edit/apply', {
@@ -3640,7 +3647,7 @@ async function doEditApply() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     resultEl.className = 'alert alert-success mt-2';
     resultEl.innerHTML = t('js_edit_success');
@@ -3675,7 +3682,7 @@ async function doEditBatchApply() {
   }));
   const deleteAttIds = _editAttachments.filter(a => !a.keep).map(a => a.id);
   const deleteAllChapters = document.getElementById('editChaptersDeleteFlag')?.value === '1';
-  const renameChapters = deleteAllChapters ? [] : _editChapters.map(ch => ({ num: ch.num, name: ch.name }));
+  const renameChapters = deleteAllChapters ? [] : _editChapters.map(ch => ({ uid: ch.uid, name: ch.name }));
 
   try {
     const r = await fetch('/api/edit/batch/start', {
@@ -3691,7 +3698,7 @@ async function doEditBatchApply() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     // Show progress section and start SSE
     document.getElementById('editBatchProgressSection').classList.remove('hidden');
@@ -3863,7 +3870,7 @@ async function doRemoveTags() {
       body: JSON.stringify({ file: _editFile }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     document.getElementById('editTagsBody').innerHTML =
       `<p style="color:var(--text-muted);font-size:0.85rem;margin:0">${t('edit_tags_none')}</p>`;
     const resultEl = document.getElementById('editResult');
@@ -4301,7 +4308,7 @@ async function mxStartMux() {
       }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     mxGoStep(6);
     mxConnectSSE();
@@ -4667,7 +4674,7 @@ async function mxOsSearchSubtitles(ffprobe_index, file_idx) {
       body: JSON.stringify({ file: mkv_path, language }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     if (statusEl) statusEl.textContent = '';
     mxOsShowResults(data.results || [], ffprobe_index, file_idx, data.hash, data.api_total);
   } catch (e) {
@@ -4713,7 +4720,7 @@ async function mxOsConfirmDownload(file_id, filename, ffprobe_index, file_idx, b
       body: JSON.stringify({ file_id, filename }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     const tr = mxFindTrack(ffprobe_index, file_idx);
     if (tr) { tr.action = 'ocr'; tr.converted_path = data.path; tr.include = true; }
@@ -4771,7 +4778,7 @@ async function osStepSearch() {
       body: JSON.stringify({ file: mkv_path, language: lang }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     if (statusEl) statusEl.textContent = '';
     osStandaloneShowResults(data.results || [], data.hash, data.api_total, lang);
   } catch (e) {
@@ -4813,11 +4820,11 @@ async function osStandaloneConfirm(file_id, filename, lang, btn) {
       body: JSON.stringify({ file_id, filename }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     const isoLang = { it:'ita', en:'eng', fr:'fra', de:'deu', es:'spa', pt:'por' }[lang] || lang;
     const uid = -(++_osUidSeq);
     S.trackTable.push({
-      type: 'subtitle', source: 'source', ffprobe_index: uid,
+      type: 'subtitle', source: 'source', ffprobe_index: uid, mkvmerge_id: -1,
       codec: 'SRT', mkv_codec: 'S_TEXT/UTF8',
       language: isoLang, title: 'SRT (OS)',
       forced: false, default: false, include: true, delay_ms: 0,
@@ -4854,7 +4861,7 @@ async function mxOsStandaloneSearch() {
       body: JSON.stringify({ file: mkv_path, language: lang }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     if (statusEl) statusEl.textContent = '';
     mxOsStandaloneShowResults(data.results || [], data.hash, data.api_total, lang, fileIdx);
   } catch (e) {
@@ -4895,7 +4902,7 @@ async function mxOsStandaloneConfirm(file_id, filename, lang, fileIdx, btn) {
       body: JSON.stringify({ file_id, filename }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     const isoLang = { it:'ita', en:'eng', fr:'fra', de:'deu', es:'spa', pt:'por' }[lang] || lang;
     const uid = -(++_osUidSeq);
     MX.tracks.push({
@@ -4944,7 +4951,7 @@ async function mxOsStepSearch() {
       body: JSON.stringify({ file: mkv_path, language: lang }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     if (statusEl) statusEl.textContent = '';
     mxOsStandaloneShowResults(data.results || [], data.hash, data.api_total, lang, fileIdx);
   } catch (e) {
@@ -4990,7 +4997,7 @@ async function settingsSave() {
       body: JSON.stringify({ username, password, api_key }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     resEl.className = 'alert alert-success mt-2';
     resEl.textContent = t('js_creds_saved');
     resEl.classList.remove('hidden');
@@ -5013,7 +5020,7 @@ async function settingsTest() {
   try {
     const r = await fetch('/api/config/opensubtitles/test', { method: 'POST' });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
     resEl.className = 'alert alert-success mt-2';
     resEl.textContent = tf('js_test_ok', esc(data.username), data.remaining_downloads);
     resEl.classList.remove('hidden');
@@ -5066,7 +5073,7 @@ async function _osDoSearch(ffprobe_index, source) {
       body: JSON.stringify({ file: mkv_path, language }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     if (statusEl) statusEl.textContent = '';
     osShowResults(data.results || [], ffprobe_index, source, data.hash, data.api_total);
@@ -5122,7 +5129,7 @@ async function osConfirmDownload(file_id, filename, ffprobe_index, source, btn) 
       body: JSON.stringify({ file_id, filename }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     const tr = S.trackTable.find(t => t.ffprobe_index === ffprobe_index && t.source === source);
     if (tr) {
@@ -5169,7 +5176,7 @@ async function osSaveCreds() {
       body: JSON.stringify({ username, password, api_key }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || t('js_error'));
+    if (!r.ok) throw new Error(_errDetail(data) || t('js_error'));
 
     const r2 = await fetch('/api/config/opensubtitles/test', { method: 'POST' });
     const data2 = await r2.json();
@@ -5201,7 +5208,7 @@ async function osSaveCreds() {
 applyLang();
 
 /* ── Version check ──────────────────────────────────────────────────────── */
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.0.1';
 
 (function checkNewVersion() {
   fetch('https://api.github.com/repos/linterista22/mkv-maximus/releases/latest', {cache: 'no-store'})

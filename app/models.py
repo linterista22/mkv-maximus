@@ -96,7 +96,7 @@ class EditTrackChange(BaseModel):
 
 
 class EditChapterRename(BaseModel):
-    num: int
+    uid: int
     name: str
 
 

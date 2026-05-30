@@ -180,7 +180,7 @@ async def get_attachments(filepath: str) -> list[dict]:
 
 
 async def get_chapters(filepath: str) -> list[dict]:
-    """Return list of {num, timestamp, name} for all chapters using ffprobe."""
+    """Return list of {uid, num, timestamp, name} for all chapters using ffprobe."""
     cmd = [
         "ffprobe", "-v", "quiet",
         "-print_format", "json",
@@ -211,7 +211,8 @@ async def get_chapters(filepath: str) -> list[dict]:
         s = int(secs % 60)
         ts = f"{h:02d}:{m:02d}:{s:02d}"
         name = ch.get("tags", {}).get("title", "")
-        result.append({"num": len(result) + 1, "timestamp": ts, "name": name})
+        uid = ch.get("id", len(result) + 1)
+        result.append({"uid": uid, "num": len(result) + 1, "timestamp": ts, "name": name})
     return result
 
 

@@ -84,19 +84,14 @@ async def edit_apply(req: EditApplyRequest):
 
     if req.delete_all_chapters:
         cmd += ["--chapters", ""]
-    else:
-        for r in req.rename_chapters:
-            cmd += ["--edit", f"chapter:{r.num}", "--set", f"name={r.name}"]
 
     proc = await asyncio.create_subprocess_exec(
         *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await proc.communicate()
     if proc.returncode != 0:
-        raise HTTPException(
-            status_code=422,
-            detail=f"mkvpropedit error: {stderr.decode('utf-8', errors='replace')}",
-        )
+        err = stderr.decode('utf-8', errors='replace').strip() or stdout.decode('utf-8', errors='replace').strip()
+        raise HTTPException(status_code=422, detail=f"mkvpropedit error: {err}")
     return {"ok": True, "output": stdout.decode("utf-8", errors="replace")}
 
 
@@ -113,10 +108,8 @@ async def edit_remove_tags(req: EditAnalyzeRequest):
     )
     stdout, stderr = await proc.communicate()
     if proc.returncode != 0:
-        raise HTTPException(
-            status_code=422,
-            detail=f"mkvpropedit error: {stderr.decode('utf-8', errors='replace')}",
-        )
+        err = stderr.decode('utf-8', errors='replace').strip() or stdout.decode('utf-8', errors='replace').strip()
+        raise HTTPException(status_code=422, detail=f"mkvpropedit error: {err}")
     return {"ok": True}
 
 
@@ -143,9 +136,6 @@ def _build_mkvpropedit_cmd(file_path: str, req_dict: dict) -> list[str]:
         cmd += ["--delete-attachment", f"id:{att_id}"]
     if req_dict.get("delete_all_chapters"):
         cmd += ["--chapters", ""]
-    else:
-        for r in req_dict.get("rename_chapters", []):
-            cmd += ["--edit", f"chapter:{r['num']}", "--set", f"name={r['name']}"]
     return cmd
 
 
@@ -172,9 +162,10 @@ async def _run_batch_edit_job(
                 proc = await asyncio.create_subprocess_exec(
                     *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
                 )
-                _, stderr = await proc.communicate()
+                stdout, stderr = await proc.communicate()
                 if proc.returncode != 0:
-                    raise RuntimeError(stderr.decode("utf-8", errors="replace").strip())
+                    err = stderr.decode("utf-8", errors="replace").strip() or stdout.decode("utf-8", errors="replace").strip()
+                    raise RuntimeError(err)
                 ok_count += 1
                 _push_event({"event": "batch_episode_done", "episode": ep_num, "total": total, "edit_batch": True})
             except Exception as e:

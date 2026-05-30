@@ -1,0 +1,97 @@
+<h2>Quale direzione di design preferisci?</h2>
+<p class="subtitle">Tre approcci diversi per il redesign di MKV Maximus</p>
+
+<div class="cards">
+
+  <!-- Option A: Refined Dark -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f1117;padding:14px;border-radius:6px;">
+      <div style="background:#1a1d27;border:1px solid #2e3347;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:36px;height:36px;background:#4f8ef7;border-radius:8px;flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#4f8ef7;">MKV Maximus</div>
+            <div style="font-size:10px;color:#8892b0;">The ultimate MKV toolkit</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:#222636;border:1px solid #2e3347;border-radius:6px;padding:8px;text-align:center;">
+            <div style="width:24px;height:24px;background:#4f8ef720;border-radius:4px;margin:0 auto 4px;"></div>
+            <div style="font-size:10px;color:#e8eaf6;font-weight:600;">Sync</div>
+            <div style="font-size:8px;color:#8892b0;">Sync audio tracks</div>
+          </div>
+          <div style="background:#222636;border:1px solid #2e3347;border-radius:6px;padding:8px;text-align:center;">
+            <div style="width:24px;height:24px;background:#4caf6e20;border-radius:4px;margin:0 auto 4px;"></div>
+            <div style="font-size:10px;color:#e8eaf6;font-weight:600;">Probe</div>
+            <div style="font-size:8px;color:#8892b0;">Analyze media</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:#8892b0;text-align:center;">Design attuale raffinato — miglioramento incrementale</div>
+    </div>
+    <div class="card-body">
+      <h3>A — Refined Dark</h3>
+      <p>Mantiene la palette attuale (navy/blue), migliora spaziature, tipografia, micro-interazioni. Evoluzione conservativa, zero rottura visiva.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Modern Glassmorphism -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg,#0d1117 0%,#161b27 100%);padding:14px;border-radius:6px;">
+      <div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#4f8ef7);border-radius:10px;flex-shrink:0;box-shadow:0 4px 12px #6366f140;"></div>
+          <div>
+            <div style="font-size:13px;font-weight:700;background:linear-gradient(90deg,#a5b4fc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">MKV Maximus</div>
+            <div style="font-size:10px;color:#94a3b8;">The ultimate MKV toolkit</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);border-radius:8px;padding:8px;text-align:center;">
+            <div style="width:24px;height:24px;background:linear-gradient(135deg,#6366f1,#4f8ef7);border-radius:6px;margin:0 auto 4px;"></div>
+            <div style="font-size:10px;color:#e2e8f0;font-weight:600;">Sync</div>
+          </div>
+          <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:8px;text-align:center;">
+            <div style="width:24px;height:24px;background:linear-gradient(135deg,#10b981,#34d399);border-radius-6px;margin:0 auto 4px;"></div>
+            <div style="font-size:10px;color:#e2e8f0;font-weight:600;">Probe</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:#64748b;text-align:center;">Glass surfaces + gradienti vivaci — look moderno</div>
+    </div>
+    <div class="card-body">
+      <h3>B — Modern Glass</h3>
+      <p>Superfici frosted-glass, gradienti sui colori principali, glow sui bottoni. Look premium/moderno. Richiede più lavoro CSS.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Clean Minimal -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0a0a0f;padding:14px;border-radius:6px;">
+      <div style="padding:10px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #1e1e2e;">
+          <div style="width:32px;height:32px;background:#fff;border-radius:6px;flex-shrink:0;"></div>
+          <div style="font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.02em;">MKV Maximus</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;background:#ffffff08;">
+            <div style="width:18px;height:18px;background:#fff3;border-radius:3px;flex-shrink:0;"></div>
+            <div style="font-size:11px;color:#fff;font-weight:600;">Sync</div>
+            <div style="font-size:9px;color:#666;margin-left:auto;">→</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;">
+            <div style="width:18px;height:18px;background:#fff3;border-radius:3px;flex-shrink:0;"></div>
+            <div style="font-size:11px;color:#aaa;font-weight:600;">Probe</div>
+            <div style="font-size:9px;color:#444;margin-left:auto;">→</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:#444;text-align:center;">Lista verticale + massimo contrasto — stile "developer tool"</div>
+    </div>
+    <div class="card-body">
+      <h3>C — Clean Minimal</h3>
+      <p>Layout lista, contrasto estremo bianco-su-nero, quasi niente colore. Stile developer tool / Linear. Richiede cambio di struttura hub.</p>
+    </div>
+  </div>
+
+</div>

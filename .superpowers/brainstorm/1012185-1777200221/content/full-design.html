@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MKV Maximus — Design Proposal</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --border: #2e3347;
+    --text: #e8eaf6;
+    --text-muted: #8892b0;
+    --radius: 8px;
+    --radius-sm: 4px;
+    --shadow: 0 2px 16px rgba(0,0,0,0.5);
+    --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    /* Tool accent colors */
+    --sync:  #4f8ef7;
+    --probe: #4caf6e;
+    --edit:  #ffb347;
+    --mux:   #64b5f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: #181c2e; color: #ccc; padding: 24px 16px 60px; font-size: 14px; }
+  h1 { color: #e8eaf6; font-size: 1.1rem; margin-bottom: 4px; }
+  .page-sub { color: #8892b0; font-size: 0.82rem; margin-bottom: 32px; }
+  .section-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: #4f8ef7; margin-bottom: 10px;
+    padding-left: 2px;
+  }
+  .mockup-wrap {
+    background: var(--bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.6);
+    margin-bottom: 32px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1.1rem;
+    display: flex; align-items: center; gap: 0.65rem;
+  }
+  .app-icon { width: 26px; height: 26px; border-radius: 5px; background: #4f8ef7; flex-shrink: 0; }
+  .header-title-block { display: flex; flex-direction: column; }
+  .app-name { font-size: 1rem; font-weight: 700; color: #4f8ef7; letter-spacing: 0.01em; line-height: 1.2; }
+  .app-sub { font-size: 0.65rem; color: #8892b0; line-height: 1.2; }
+  .header-spacer { flex: 1; }
+  .hdr-btns { display: flex; gap: 0.25rem; }
+  .hdr-btn {
+    background: transparent; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-muted);
+    font-size: 0.88rem; padding: 0.22rem 0.48rem; cursor: pointer;
+    line-height: 1; transition: all 0.15s;
+  }
+  .hdr-btn:hover { background: var(--surface2); border-color: #4f8ef7; color: var(--text); }
+  .hdr-back {
+    font-size: 0.78rem; padding: 0.22rem 0.6rem; color: var(--text-muted);
+    background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  /* Tool-colored active back button */
+  .hdr-back.tool-sync  { border-color: var(--sync);  color: var(--sync);  }
+  .hdr-back.tool-probe { border-color: var(--probe); color: var(--probe); }
+  .hdr-back.tool-edit  { border-color: var(--edit);  color: var(--edit);  }
+  .hdr-back.tool-mux   { border-color: var(--mux);   color: var(--mux);   }
+
+  /* ── HUB ── */
+  .hub-body { padding: 1.5rem 1.1rem; }
+  .hub-hero {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.1rem; margin-bottom: 1.25rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .hub-hero-icon { width: 48px; height: 48px; border-radius: 10px; background: #4f8ef7; flex-shrink: 0; }
+  .hub-hero-title { font-size: 1.25rem; font-weight: 800; color: #e8eaf6; letter-spacing: -0.01em; line-height: 1.2; }
+  .hub-hero-sub { font-size: 0.78rem; color: #8892b0; margin-top: 3px; }
+
+  .hub-list { display: flex; flex-direction: column; gap: 0.55rem; }
+  .hub-row {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.75rem 1rem;
+    display: flex; align-items: center; gap: 0.85rem;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .hub-row::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 0;
+  }
+  .hub-row.sync::before  { background: var(--sync); }
+  .hub-row.probe::before { background: var(--probe); }
+  .hub-row.edit::before  { background: var(--edit); }
+  .hub-row.mux::before   { background: var(--mux); }
+
+  .hub-row:hover { border-color: currentColor; background: var(--surface2); }
+  .hub-row.sync:hover  { border-color: var(--sync); }
+  .hub-row.probe:hover { border-color: var(--probe); }
+  .hub-row.edit:hover  { border-color: var(--edit); }
+  .hub-row.mux:hover   { border-color: var(--mux); }
+
+  .hub-row-icon {
+    width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .hub-row.sync  .hub-row-icon { background: rgba(79,142,247,0.12); }
+  .hub-row.probe .hub-row-icon { background: rgba(76,175,110,0.12); }
+  .hub-row.edit  .hub-row-icon { background: rgba(255,179,71,0.12); }
+  .hub-row.mux   .hub-row-icon { background: rgba(100,181,246,0.12); }
+
+  .hub-row-text { flex: 1; min-width: 0; }
+  .hub-row-name { font-size: 0.95rem; font-weight: 700; color: #e8eaf6; line-height: 1.2; }
+  .hub-row-desc { font-size: 0.75rem; color: #8892b0; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hub-row-arrow { font-size: 0.8rem; color: #8892b0; flex-shrink: 0; }
+  .hub-row.sync  .hub-row-arrow { color: var(--sync); }
+  .hub-row.probe .hub-row-arrow { color: var(--probe); }
+  .hub-row.edit  .hub-row-arrow { color: var(--edit); }
+  .hub-row.mux   .hub-row-arrow { color: var(--mux); }
+
+  /* ── INNER TOOL SCREEN (Sync example) ── */
+  .tool-body { padding: 1rem 1.1rem; }
+
+  .steps-nav {
+    display: flex; gap: 0.2rem; overflow-x: auto;
+    padding-bottom: 0.2rem; margin-bottom: 1.25rem;
+    scrollbar-width: none;
+  }
+  .step-pill {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.35rem 0.7rem; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 500; white-space: nowrap;
+    background: var(--surface2); color: var(--text-muted);
+    border: 1px solid var(--border); user-select: none;
+    min-height: 38px;
+  }
+  .step-pill.active-sync  { background: var(--sync);  color: #fff; border-color: var(--sync); }
+  .step-pill.active-probe { background: var(--probe); color: #fff; border-color: var(--probe); }
+  .step-pill.done-sync    { color: var(--sync);  border-color: var(--sync);  background: rgba(79,142,247,0.08); }
+  .step-pill.done-probe   { color: var(--probe); border-color: var(--probe); background: rgba(76,175,110,0.08); }
+  .step-num {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700;
+    background: rgba(255,255,255,0.15); flex-shrink: 0;
+  }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.1rem; margin-bottom: 0.85rem;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 0.9rem; font-weight: 600; color: #e8eaf6;
+    margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.45rem;
+  }
+  .file-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 0.82rem;
+    margin-bottom: 0.5rem;
+  }
+  .file-icon { font-size: 1.1rem; flex-shrink: 0; opacity: 0.7; }
+  .file-name { flex: 1; color: #e8eaf6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-size { font-size: 0.72rem; color: #8892b0; flex-shrink: 0; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.35rem; padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+    border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+    min-height: 40px; white-space: nowrap; width: 100%; margin-top: 0.5rem;
+  }
+  .btn-sync  { background: var(--sync);  color: #fff; }
+  .btn-probe { background: var(--probe); color: #fff; }
+  .btn-edit  { background: var(--edit);  color: #1a1d27; }
+  .btn-mux   { background: var(--mux);   color: #1a1d27; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: #8892b0; }
+
+  .progress-bar-wrap {
+    background: var(--surface2); border-radius: 20px;
+    overflow: hidden; height: 6px; margin: 0.6rem 0;
+  }
+  .progress-bar { height: 100%; border-radius: 20px; transition: width 0.3s; }
+  .pb-sync  { background: var(--sync);  width: 60%; }
+  .pb-probe { background: var(--probe); width: 85%; }
+
+  /* ── INFO MODAL ── */
+  .modal-demo {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); max-width: 360px; margin: 0 auto;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .modal-header-row {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 1rem 1.1rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-icon { width: 44px; height: 44px; border-radius: 9px; background: #4f8ef7; flex-shrink: 0; }
+  .modal-title { font-size: 1rem; font-weight: 700; color: #4f8ef7; }
+  .modal-ver { font-size: 0.72rem; color: #8892b0; margin-top: 2px; }
+  .modal-close { margin-left: auto; background: none; border: none; color: #8892b0; font-size: 1rem; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+  .modal-body { padding: 0.85rem 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .info-row {
+    display: flex; gap: 0.65rem; font-size: 0.83rem;
+    border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;
+  }
+  .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .info-label { color: #8892b0; min-width: 76px; }
+  .info-link { color: #4f8ef7; text-decoration: none; }
+  .info-link:hover { text-decoration: underline; }
+
+  /* layout helpers */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .badge { display: inline-flex; align-items: center; padding: 0.12rem 0.4rem; border-radius: 3px; font-size: 0.68rem; font-weight: 600; }
+  .badge-lang { background: rgba(79,142,247,0.2); color: #64b5f6; }
+  .badge-conv { background: rgba(255,179,71,0.15); color: #ffb347; border: 1px solid rgba(255,179,71,0.3); }
+  .track-row { display: flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; flex-wrap: wrap; }
+  .track-row:last-child { border-bottom: none; }
+  .track-codec { font-weight: 600; color: #e8eaf6; }
+  .track-detail { color: #8892b0; font-size: 0.73rem; }
+
+  /* annotations */
+  .note { font-size: 0.72rem; color: #4f8ef7; background: rgba(79,142,247,0.1); border: 1px solid rgba(79,142,247,0.25); border-radius: 4px; padding: 3px 8px; margin-top: 4px; display: inline-block; }
+  .note-green { color: #4caf6e; background: rgba(76,175,110,0.1); border-color: rgba(76,175,110,0.25); }
+  .note-orange { color: #ffb347; background: rgba(255,179,71,0.1); border-color: rgba(255,179,71,0.25); }
+
+  hr { border: none; border-top: 1px solid #2e3347; margin: 28px 0; }
+</style>
+</head>
+<body>
+
+<h1>MKV Maximus — Design Proposal</h1>
+<p class="page-sub">Refined Dark · Lista orizzontale · Colori per strumento. Scorri per vedere tutto.</p>
+
+<!-- ══════════════════════════════════════════
+     SEZIONE 1: HUB
+════════════════════════════════════════════ -->
+<div class="section-label">1 — Pagina principale (Hub)</div>
+<div class="mockup-wrap">
+
+  <!-- header -->
+  <div class="app-header">
+    <div class="app-icon"></div>
+    <div class="header-title-block">
+      <span class="app-name">MKV Maximus</span>
+      <span class="app-sub">1.0 · by linterista22</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="hdr-btns">
+      <button class="hdr-btn" title="Informazioni">ℹ</button>
+      <button class="hdr-btn" title="Segnala un bug" onclick="window.open('https://github.com/linterista22/mkv-maximus/issues','_blank')">🐛</button>
+      <button class="hdr-btn" title="Licenza" onclick="window.open('https://github.com/linterista22/mkv-maximus/blob/main/LICENSE','_blank')">📄</button>
+    </div>
+  </div>
+
+  <!-- hub body -->
+  <div class="hub-body">
+    <div class="hub-hero">
+      <div class="hub-hero-icon"></div>
+      <div>
+        <div class="hub-hero-title">MKV Maximus</div>
+        <div class="hub-hero-sub">The ultimate MKV toolkit for your home theater</div>
+      </div>
+    </div>
+    <div class="hub-list">
+      <div class="hub-row sync">
+        <div class="hub-row-icon">🔄</div>
+        <div class="hub-row-text">
+          <div class="hub-row-name">Sync</div>
+          <div class="hub-row-desc">Sincronizza audio tra release diverse e rimux in un click</div>
+        </div>
+        <div class="hub-row-arrow">→</div>
+      </div>
+      <div class="hub-row probe">
+        <div class="hub-row-icon">🔍</div>
+        <div class="hub-row-text">
+          <div class="hub-row-name">Probe</div>
+          <div class="hub-row-desc">Analizza qualsiasi file media — tutto quello che MediaInfo sa, in un tab</div>
+        </div>
+        <div class="hub-row-arrow">→</div>
+      </div>
+      <div class="hub-row edit">
+        <div class="hub-row-icon">✏️</div>
+        <div class="hub-row-text">
+          <div class="hub-row-name">Edit</div>
+          <div class="hub-row-desc">Cambia lingua, flag e titoli senza toccare il video. Istantaneo.</div>
+        </div>
+        <div class="hub-row-arrow">→</div>
+      </div>
+      <div class="hub-row mux">
+        <div class="hub-row-icon">🎬</div>
+        <div class="hub-row-text">
+          <div class="hub-row-name">Mux</div>
+          <div class="hub-row-desc">Assembla tracce da più file MKV in un unico file</div>
+        </div>
+        <div class="hub-row-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+<span class="note">Barra colorata sinistra = colore del tool · Freccia colorata al hover · Pulsanti header aprono link direttamente</span>
+
+<hr>
+
+<!-- ══════════════════════════════════════════
+     SEZIONE 2: SCHERMATA INTERNA — Sync (blu)
+════════════════════════════════════════════ -->
+<div class="section-label">2 — Dentro Sync (accento blu)</div>
+<div class="mockup-wrap">
+
+  <div class="app-header">
+    <div class="app-icon"></div>
+    <div class="header-title-block">
+      <span class="app-name">MKV Maximus</span>
+      <span class="app-sub" style="color:#4f8ef7;">Sync</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="hdr-btns">
+      <button class="hdr-back tool-sync">← Hub</button>
+    </div>
+  </div>
+
+  <div class="tool-body">
+    <!-- step pills -->
+    <div class="steps-nav">
+      <div class="step-pill done-sync"><div class="step-num">✓</div>Modalità</div>
+      <div class="step-pill done-sync"><div class="step-num">✓</div>File</div>
+      <div class="step-pill active-sync"><div class="step-num">3</div>Analisi</div>
+      <div class="step-pill"><div class="step-num">4</div>Offset</div>
+      <div class="step-pill"><div class="step-num">5</div>Tracce</div>
+      <div class="step-pill"><div class="step-num">6</div>Mux</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📂 File selezionati</div>
+      <div class="file-row">
+        <span class="file-icon">🎬</span>
+        <span class="file-name">The.Batman.2022.ITA.mkv</span>
+        <span class="file-size">18.4 GB</span>
+      </div>
+      <div class="file-row">
+        <span class="file-icon">🎬</span>
+        <span class="file-name">The.Batman.2022.ENG.mkv</span>
+        <span class="file-size">21.1 GB</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Calcolo offset in corso…</div>
+      <div class="progress-bar-wrap"><div class="progress-bar pb-sync"></div></div>
+      <div style="font-size:0.75rem;color:#8892b0;">Finestra 1/2 — 0:00–5:00</div>
+    </div>
+
+    <button class="btn btn-sync">Avanti →</button>
+  </div>
+</div>
+<span class="note">Step pill completati in blu · Barra avanzamento blu · Pulsante principale blu</span>
+
+<hr>
+
+<!-- ══════════════════════════════════════════
+     SEZIONE 3: SCHERMATA INTERNA — Probe (verde)
+════════════════════════════════════════════ -->
+<div class="section-label">3 — Dentro Probe (accento verde)</div>
+<div class="mockup-wrap">
+
+  <div class="app-header">
+    <div class="app-icon"></div>
+    <div class="header-title-block">
+      <span class="app-name">MKV Maximus</span>
+      <span class="app-sub" style="color:#4caf6e;">Probe</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="hdr-btns">
+      <button class="hdr-back tool-probe">← Hub</button>
+    </div>
+  </div>
+
+  <div class="tool-body">
+    <div class="card">
+      <div class="card-title">📂 File da analizzare</div>
+      <div class="file-row" style="border-color:#4caf6e40;">
+        <span class="file-icon">🎬</span>
+        <span class="file-name">The.Batman.2022.4K.mkv</span>
+        <span class="file-size">42.7 GB</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Tracce rilevate</div>
+      <div class="track-row">
+        <span class="track-codec">HEVC</span>
+        <span class="track-detail">4K · HDR10 · 23.976fps</span>
+        <span class="badge badge-lang">video</span>
+      </div>
+      <div class="track-row">
+        <span class="track-codec">TrueHD</span>
+        <span class="track-detail">7.1 · ITA</span>
+        <span class="badge badge-lang">ITA</span>
+        <span class="badge badge-conv">→ FLAC</span>
+      </div>
+      <div class="track-row">
+        <span class="track-codec">DTS-HD MA</span>
+        <span class="track-detail">5.1 · ENG</span>
+        <span class="badge badge-lang">ENG</span>
+        <span class="badge badge-conv">→ FLAC</span>
+      </div>
+    </div>
+
+    <button class="btn btn-probe">Analizza →</button>
+  </div>
+</div>
+<span class="note note-green">Accent verde ovunque: pulsante, bordi attivi, step completati</span>
+
+<hr>
+
+<!-- ══════════════════════════════════════════
+     SEZIONE 4: INFO MODAL (con GPL 3 link)
+════════════════════════════════════════════ -->
+<div class="section-label">4 — Popup "ℹ" — Licenza corretta + link cliccabili</div>
+<div style="background:#0f1117;padding:20px;border-radius:12px;margin-bottom:8px;">
+  <div class="modal-demo">
+    <div class="modal-header-row">
+      <div class="modal-icon"></div>
+      <div>
+        <div class="modal-title">MKV Maximus</div>
+        <div class="modal-ver">Versione 1.0</div>
+      </div>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-row">
+        <span class="info-label">Autore</span>
+        <span><a class="info-link" href="https://github.com/linterista22" target="_blank">linterista22</a></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">GitHub</span>
+        <span><a class="info-link" href="https://github.com/linterista22/mkv-maximus" target="_blank">linterista22/mkv-maximus</a></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Versione</span>
+        <span style="color:#e8eaf6;">1.0</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Licenza</span>
+        <span><a class="info-link" href="https://github.com/linterista22/mkv-maximus/blob/main/LICENSE" target="_blank">GNU GPL v3</a></span>
+      </div>
+    </div>
+  </div>
+</div>
+<span class="note">Licenza non è più "in arrivo" — è un link cliccabile diretto al file LICENSE su GitHub</span>
+
+</body>
+</html>
