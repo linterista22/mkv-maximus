@@ -24,3 +24,7 @@ docker-compose.override.yml
 .pytest_cache/
 dist/
 *.egg-info/
+
+# Private / local only
+piano_promozione.txt
+.superpowers/
