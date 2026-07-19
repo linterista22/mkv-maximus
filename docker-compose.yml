@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mkv_maximus:latest
+    image: linterista22/mkv-maximus:latest
     container_name: mkv_maximus
     ports:
       - "7788:7788"
