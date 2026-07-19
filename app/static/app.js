@@ -1765,7 +1765,7 @@ function updateSubAction(sel) {
     else if (val === 'download_srt') {
       t2.include = true;
       t2.action = 'ocr';
-      t2.converted_path = null;
+      // non azzerare converted_path: il download OS lo imposta via osConfirmDownload
     } else {
       t2.include = true; t2.action = val;
       t2.converted_path = null;
@@ -5208,7 +5208,7 @@ async function osSaveCreds() {
 applyLang();
 
 /* ── Version check ──────────────────────────────────────────────────────── */
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 
 (function checkNewVersion() {
   fetch('https://api.github.com/repos/linterista22/mkv-maximus/releases/latest', {cache: 'no-store'})

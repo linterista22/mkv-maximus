@@ -159,7 +159,10 @@ async def get_mkvmerge_info(filepath: str) -> tuple[dict[int, dict], list[dict],
     attachments: list[dict] = data.get("attachments", [])
 
     # ── chapter count ─────────────────────────────────────────────────────────
-    chapter_count: int = len(data.get("chapters", []))
+    # mkvmerge -J returns chapter *editions* (each with num_entries), not individual chapters
+    chapter_count: int = sum(
+        ed.get("num_entries", 0) for ed in data.get("chapters", [])
+    )
 
     return tracks, attachments, chapter_count
 

@@ -345,7 +345,8 @@ def build_mkvmerge_cmd(
     if no_chapters:
         cmd += ["--no-chapters"]
     elif chapters_path:
-        cmd += ["--chapters", chapters_path]
+        # --no-chapters previene la copia dei capitoli originali, --chapters aggiunge i nostri
+        cmd += ["--no-chapters", "--chapters", chapters_path]
 
     included_video = [
         t for t in track_table
@@ -563,7 +564,8 @@ def build_mkvmerge_cmd_multi(
     if no_chapters:
         cmd += ["--no-chapters"]
     elif chapters_path:
-        cmd += ["--chapters", chapters_path]
+        # --no-chapters previene la copia dei capitoli originali, --chapters aggiunge i nostri
+        cmd += ["--no-chapters", "--chapters", chapters_path]
 
     for file_idx, file_path in enumerate(files):
         file_tracks = [
