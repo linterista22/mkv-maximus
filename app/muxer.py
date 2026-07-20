@@ -482,13 +482,15 @@ def _append_track_flags(cmd: list[str], tid: str, t: dict) -> None:
 async def run_mux(
     cmd: list[str],
     progress_callback: Optional[Callable[[int, str], Awaitable[None]]] = None,
-) -> None:
+) -> list[str]:
     """
     Execute mkvmerge and stream progress events.
     progress_callback(percent, log_line)
 
     mkvmerge writes "Progress: X%\\r" with carriage returns (not newlines),
     so we must read in chunks and split on both \\r and \\n.
+
+    Returns a list of warning lines emitted by mkvmerge (may be empty).
     """
     proc = await asyncio.create_subprocess_exec(
         *cmd,
@@ -496,6 +498,7 @@ async def run_mux(
         stderr=asyncio.subprocess.STDOUT,
     )
 
+    warnings: list[str] = []
     buf = b""
     while True:
         chunk = await proc.stdout.read(256)
@@ -508,6 +511,8 @@ async def run_mux(
             line = part.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
+            if "Warning:" in line:
+                warnings.append(line)
             pct_m = re.search(r"Progress:\s*(\d+)%", line)
             percent = int(pct_m.group(1)) if pct_m else -1
             if progress_callback:
@@ -516,14 +521,18 @@ async def run_mux(
     # flush remaining buffer
     if buf:
         line = buf.decode("utf-8", errors="replace").strip()
-        if line and progress_callback:
-            pct_m = re.search(r"Progress:\s*(\d+)%", line)
-            percent = int(pct_m.group(1)) if pct_m else -1
-            await progress_callback(percent, line)
+        if line:
+            if "Warning:" in line:
+                warnings.append(line)
+            if progress_callback:
+                pct_m = re.search(r"Progress:\s*(\d+)%", line)
+                percent = int(pct_m.group(1)) if pct_m else -1
+                await progress_callback(percent, line)
 
     await proc.wait()
     if proc.returncode not in (0, 1):
         raise RuntimeError(f"mkvmerge exited with code {proc.returncode}")
+    return warnings
 
 
 def suggest_output_name(video_path: str, source_path: str) -> str:

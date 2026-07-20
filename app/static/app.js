@@ -343,7 +343,12 @@ const STRINGS = {
     js_test_connection: '🔗 Test connessione',
     js_testing: '⏳ Test…',
     js_test_ok: (user, rem) => `✓ Connessione OK — ${user} — download rimanenti oggi: ${rem ?? '?'}`,
-    js_batch_completed: (ok, total) => `Batch completato: ${ok}/${total} OK`,
+    js_batch_completed: (ok, total, warn) => {
+            let m = `Batch completato: ${ok}/${total} OK`;
+            if (warn) m += `, ${warn} con avvisi`;
+            return m;
+        },
+    js_sync_warnings_title: 'Avvisi mkvmerge',
     js_batch_episodes: (done, total) => `Batch: ${done} / ${total} episodi`,
     // SZ — Season mode
     sz_analyzing_season: 'Analisi stagione…',
@@ -729,7 +734,12 @@ const STRINGS = {
     js_test_connection: '🔗 Test connection',
     js_testing: '⏳ Testing…',
     js_test_ok: (user, rem) => `✓ Connection OK — ${user} — remaining downloads today: ${rem ?? '?'}`,
-    js_batch_completed: (ok, total) => `Batch completed: ${ok}/${total} OK`,
+    js_batch_completed: (ok, total, warn) => {
+            let m = `Batch completed: ${ok}/${total} OK`;
+            if (warn) m += `, ${warn} with warnings`;
+            return m;
+        },
+    js_sync_warnings_title: 'mkvmerge warnings',
     js_batch_episodes: (done, total) => `Batch: ${done} / ${total} episodes`,
     // SZ — Season mode
     sz_analyzing_season: 'Analyzing season…',
@@ -2593,10 +2603,18 @@ function handleSSEEvent(ev) {
     document.getElementById('batchCounter').textContent = `${ev.episode} / ${ev.total}`;
     const row = document.getElementById(`bep-${ev.episode}`);
     if (row) {
-      row.className = 'batch-ep-row batch-ep-ok';
-      row.querySelector('.batch-ep-status').textContent = '✓';
-      document.getElementById(`bep-info-${ev.episode}`).textContent =
-        `${ev.file_size_mb} MB · delay ${ev.delay_ms} ms`;
+      const hasWarn = (ev.status === 'warning' || (ev.warning_count > 0));
+      if (hasWarn) {
+        row.className = 'batch-ep-row batch-ep-warn';
+        row.querySelector('.batch-ep-status').textContent = '⚠';
+        document.getElementById(`bep-info-${ev.episode}`).textContent =
+          `${ev.file_size_mb} MB · delay ${ev.delay_ms} ms · ${ev.warning_count} warning`;
+      } else {
+        row.className = 'batch-ep-row batch-ep-ok';
+        row.querySelector('.batch-ep-status').textContent = '✓';
+        document.getElementById(`bep-info-${ev.episode}`).textContent =
+          `${ev.file_size_mb} MB · delay ${ev.delay_ms} ms`;
+      }
     }
 
   } else if (ev.event === 'batch_episode_error') {
@@ -2609,7 +2627,7 @@ function handleSSEEvent(ev) {
 
   } else if (ev.event === 'batch_done') {
     if (S.sseSource) { S.sseSource.close(); S.sseSource = null; }
-    updateProgress(100, tf('js_batch_completed', ev.ok_count, ev.total));
+    updateProgress(100, tf('js_batch_completed', ev.ok_count, ev.total, ev.warning_count || 0));
     document.getElementById('progressBar').classList.add('success');
 
   } else if (ev.event === 'phase') {
@@ -2718,6 +2736,14 @@ function showResult(ev) {
       li.textContent = `💬 ${(s.lang||'?').toUpperCase()}${s.forced?' FORCED':''}${s.default?' ★':''}`;
       list.appendChild(li);
     });
+  }
+  if (ev.warning_count > 0 && Array.isArray(ev.warnings)) {
+    const wdiv = document.createElement('div');
+    wdiv.className = 'mux-warnings';
+    wdiv.innerHTML =
+      '<strong>⚠ ' + t('js_sync_warnings_title') + ':</strong>' +
+      '<ul>' + ev.warnings.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>';
+    rc.appendChild(wdiv);
   }
 }
 
@@ -5208,7 +5234,7 @@ async function osSaveCreds() {
 applyLang();
 
 /* ── Version check ──────────────────────────────────────────────────────── */
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 
 (function checkNewVersion() {
   fetch('https://api.github.com/repos/linterista22/mkv-maximus/releases/latest', {cache: 'no-store'})

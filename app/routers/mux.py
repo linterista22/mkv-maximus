@@ -162,10 +162,11 @@ async def _run_mux_job_multi(
                     "log": line,
                 })
 
-            await run_mux(cmd, on_progress)
+            warnings = await run_mux(cmd, on_progress)
 
             output_size = Path(output_path).stat().st_size if Path(output_path).exists() else 0
             summary = _track_summary(track_table)
+            warning_count = len(warnings)
 
             _current_job.update({
                 "state": "done",
@@ -180,6 +181,8 @@ async def _run_mux_job_multi(
                 "output_path": output_path,
                 "file_size_mb": round(output_size / 1024 / 1024, 1),
                 "track_summary": summary,
+                "warnings": warnings,
+                "warning_count": warning_count,
             })
 
             _save_history({
@@ -190,7 +193,7 @@ async def _run_mux_job_multi(
                 "file_size_mb": round(output_size / 1024 / 1024, 1),
                 "track_summary": summary,
                 "timestamp": time.time(),
-                "status": "ok",
+                "status": "warning" if warnings else "ok",
                 "sub_app": "mux",
             })
 

@@ -727,10 +727,11 @@ async def _run_mux_job(
                     "log": line,
                 })
 
-            await run_mux(cmd, on_progress)
+            warnings = await run_mux(cmd, on_progress)
 
             output_size = Path(output_path).stat().st_size if Path(output_path).exists() else 0
             summary = _track_summary(track_table)
+            warning_count = len(warnings)
 
             _current_job.update({
                 "state": "done",
@@ -739,12 +740,16 @@ async def _run_mux_job(
                 "output_path": output_path,
                 "output_size": output_size,
                 "track_summary": summary,
+                "warnings": warnings,
+                "warning_count": warning_count,
             })
             _push_event({
                 "event": "done",
                 "output_path": output_path,
                 "file_size_mb": round(output_size / 1024 / 1024, 1),
                 "track_summary": summary,
+                "warnings": warnings,
+                "warning_count": warning_count,
             })
 
             _save_history({
@@ -755,7 +760,9 @@ async def _run_mux_job(
                 "file_size_mb": round(output_size / 1024 / 1024, 1),
                 "track_summary": summary,
                 "timestamp": time.time(),
-                "status": "ok",
+                "status": "warning" if warnings else "ok",
+                "warnings": warnings,
+                "warning_count": warning_count,
             })
 
         except Exception as e:
@@ -1076,16 +1083,20 @@ async def _run_batch_mux_job(
                         "batch_total": total,
                     })
 
-                await run_mux(cmd, on_ep_mux)
+                warnings = await run_mux(cmd, on_ep_mux)
 
                 output_size = Path(output_path).stat().st_size if Path(output_path).exists() else 0
                 size_mb = round(output_size / 1024 / 1024, 1)
+                warning_count = len(warnings)
+                status = "warning" if warnings else "ok"
                 batch_results.append({
                     "episode": ep_num,
                     "output_path": output_path,
                     "file_size_mb": size_mb,
                     "delay_ms": delay_ms,
-                    "status": "ok",
+                    "status": status,
+                    "warnings": warnings,
+                    "warning_count": warning_count,
                 })
                 _push_event({
                     "event": "batch_episode_done",
@@ -1094,6 +1105,9 @@ async def _run_batch_mux_job(
                     "output_path": output_path,
                     "file_size_mb": size_mb,
                     "delay_ms": delay_ms,
+                    "status": status,
+                    "warnings": warnings,
+                    "warning_count": warning_count,
                 })
                 _save_history({
                     "job_id": ep_job_id,
@@ -1102,7 +1116,9 @@ async def _run_batch_mux_job(
                     "output_path": output_path,
                     "file_size_mb": size_mb,
                     "timestamp": time.time(),
-                    "status": "ok",
+                    "status": status,
+                    "warnings": warnings,
+                    "warning_count": warning_count,
                 })
 
             except Exception as e:
@@ -1137,6 +1153,7 @@ async def _run_batch_mux_job(
                         pass
 
         ok_count = sum(1 for r in batch_results if r["status"] == "ok")
+        warning_count = sum(1 for r in batch_results if r["status"] == "warning")
         _current_job.update({
             "state": "done",
             "phase": "done",
@@ -1146,6 +1163,7 @@ async def _run_batch_mux_job(
             "event": "batch_done",
             "total": total,
             "ok_count": ok_count,
+            "warning_count": warning_count,
             "results": batch_results,
         })
 

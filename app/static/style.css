@@ -861,6 +861,23 @@ input:focus, select:focus {
 .batch-ep-error { background: rgba(255,71,87,0.06); }
 .batch-ep-error .batch-ep-status { color: var(--danger); }
 .batch-ep-error .batch-ep-info { color: var(--danger); }
+.batch-ep-warn { background: rgba(255,179,71,0.06); }
+.batch-ep-warn .batch-ep-status { color: var(--warning); }
+.batch-ep-warn .batch-ep-info { color: var(--warning); }
+
+/* ── Mux warnings ────────────────────────────────────────────────────────── */
+.mux-warnings {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,179,71,0.08);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.mux-warnings strong { color: var(--warning); }
+.mux-warnings ul { margin: 0.3rem 0 0 1.2rem; padding: 0; }
+.mux-warnings li { margin-bottom: 0.15rem; word-break: break-all; }
 
 /* ── Step nav buttons (back + forward) ──────────────────────────────────── */
 .step-nav-btns {
